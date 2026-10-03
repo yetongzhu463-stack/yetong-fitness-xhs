@@ -1,0 +1,9 @@
+# Local interviews, development evidence, and generated artifacts are not public source.
+private-profiles/
+tmp/
+dist/
+REAL_COACH_PILOT.md
+**/evals/
+**/__pycache__/
+*.py[cod]
+.DS_Store

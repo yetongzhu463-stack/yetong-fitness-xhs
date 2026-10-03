@@ -1,0 +1,4 @@
+interface:
+  display_name: "yetong-fitness-xhs-copy"
+  short_description: "读取本人已激活人物档案与选题，写有真实依据和个人口吻的小红书文案"
+  default_prompt: "使用 $yetong-fitness-xhs-copy，按我的已激活人物档案和选定选题写一篇像我本人表达的小红书文案。"
