@@ -1,0 +1,4 @@
+interface:
+  display_name: "yetong-cover"
+  short_description: "用本人真实素材设计封面，并接续提示词优化或授权成图"
+  default_prompt: "使用 $yetong-cover，根据我已确定的本地会员选题和人物档案设计封面；给出可用提示词后，询问我要直接生成还是继续优化。"

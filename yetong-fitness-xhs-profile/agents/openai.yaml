@@ -1,4 +1,0 @@
-interface:
-  display_name: "yetong-fitness-xhs-profile"
-  short_description: "先短访谈建立本地教练人物 DNA 与客群痛点档案，再按需要深访校准"
-  default_prompt: "使用 $yetong-fitness-xhs-profile 先用简短访谈建立我的基础人物 DNA 和本地客群痛点档案，缺少的经历以后按需补充。"

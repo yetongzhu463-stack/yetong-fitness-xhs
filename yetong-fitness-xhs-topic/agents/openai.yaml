@@ -1,4 +1,0 @@
-interface:
-  display_name: "yetong-fitness-xhs-topic"
-  short_description: "读取已激活人物档案，为本地健身教练生成可验证、可拍摄的小红书获客选题"
-  default_prompt: "使用 $yetong-fitness-xhs-topic，读取我指定的已激活人物档案，生成有真实来源、能触达本地潜在会员的小红书选题。"

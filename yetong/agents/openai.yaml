@@ -1,0 +1,4 @@
+interface:
+  display_name: "yetong"
+  short_description: "核验并展示 YETONG 三类服务，分流已上线的本地内容任务"
+  default_prompt: "使用 $yetong，先检查我实际安装的技能并展示三类服务及每项触发方式；然后根据我的需求进入已可用的模块。"

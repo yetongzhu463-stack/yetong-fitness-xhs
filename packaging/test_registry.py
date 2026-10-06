@@ -6,14 +6,16 @@ from __future__ import annotations
 import importlib.util
 import json
 import shutil
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
-REGISTRY_RELATIVE = "yetong-fitness-xhs/references/capability-registry.json"
-MODULE_PATH = PROJECT_ROOT / "yetong-fitness-xhs/scripts/validate_registry.py"
+REGISTRY_RELATIVE = "yetong/references/capability-registry.json"
+MODULE_PATH = PROJECT_ROOT / "yetong/scripts/validate_registry.py"
 SPEC = importlib.util.spec_from_file_location("yetong_registry_validator", MODULE_PATH)
 assert SPEC is not None and SPEC.loader is not None
 validator = importlib.util.module_from_spec(SPEC)
@@ -40,11 +42,24 @@ class RegistryTests(unittest.TestCase):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(self.registry, ensure_ascii=False), encoding="utf-8")
 
-    def test_current_three_modules(self) -> None:
-        self.assertEqual(len(validator.validate(self.root, REGISTRY_RELATIVE)), 3)
+    def test_current_six_modules_have_short_ids_and_content_line(self) -> None:
+        enabled = validator.validate(self.root, REGISTRY_RELATIVE)
+        self.assertEqual(set(enabled), {
+            "yetong-dna", "yetong-topic", "yetong-copy", "yetong-review",
+            "yetong-title", "yetong-cover",
+        })
+        lines = {item["id"]: item for item in self.registry["service_lines"]}
+        self.assertEqual(set(lines), {"content", "moments", "performance"})
+        self.assertEqual(lines["content"]["status"], "active")
+        self.assertEqual(lines["moments"]["status"], "planned")
+        self.assertEqual(lines["performance"]["status"], "planned")
+        for item in self.registry["capabilities"]:
+            self.assertIn(item["service_line"], {"shared", "content"})
+            self.assertIn(f"${item['id']}", item["menu_trigger"])
+        self.assertEqual(self.registry["capabilities"][0]["service_line"], "shared")
 
     def test_future_module_registers_without_router_edit(self) -> None:
-        identifier = "yetong-fitness-xhs-risk"
+        identifier = "yetong-risk"
         entry = f"{identifier}/SKILL.md"
         skill_path = self.root / entry
         skill_path.parent.mkdir(parents=True)
@@ -58,6 +73,9 @@ class RegistryTests(unittest.TestCase):
         gate_path.write_text("# synthetic gate for registry validation\n", encoding="utf-8")
         self.registry["capabilities"].append({
             "id": identifier,
+            "service_line": "content",
+            "menu_label": "发布风险检查",
+            "menu_trigger": f"使用 ${identifier} 检查这篇内容的发布风险。",
             "entry": entry,
             "package_files": [entry, gate],
             "purpose": "检查已写好的本地健身内容草稿",
@@ -86,9 +104,66 @@ class RegistryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "预检脚本"):
             validator.validate(self.root, REGISTRY_RELATIVE)
 
+    def test_planned_service_line_cannot_claim_enabled_skill(self) -> None:
+        self.registry["capabilities"][1]["service_line"] = "moments"
+        self.save_registry()
+        with self.assertRaisesRegex(ValueError, "规划中"):
+            validator.validate(self.root, REGISTRY_RELATIVE)
+
+    def test_future_moments_module_activates_its_service_line(self) -> None:
+        identifier = "yetong-moments"
+        entry = f"{identifier}/SKILL.md"
+        skill_path = self.root / entry
+        skill_path.parent.mkdir(parents=True)
+        skill_path.write_text(
+            f"---\nname: {identifier}\ndescription: 根据本人档案规划面向本地会员的朋友圈内容。\n---\n\n# 朋友圈内容\n",
+            encoding="utf-8",
+        )
+        gate = f"{identifier}/scripts/check_profile.py"
+        gate_path = self.root / gate
+        gate_path.parent.mkdir(parents=True)
+        gate_path.write_text("# synthetic gate for registry validation\n", encoding="utf-8")
+        self.registry["service_lines"][1]["status"] = "active"
+        self.registry["capabilities"].append({
+            "id": identifier,
+            "service_line": "moments",
+            "menu_label": "朋友圈内容",
+            "menu_trigger": f"使用 ${identifier} 规划本周朋友圈内容。",
+            "entry": entry,
+            "package_files": [entry, gate],
+            "purpose": "根据本人档案规划面向本地会员的朋友圈内容",
+            "use_when": ["已有档案，要安排朋友圈内容"],
+            "avoid_when": ["只要小红书选题"],
+            "profile_requirement": "active",
+            "required_any_of": [],
+            "produces": ["moments_plan"],
+            "offer_fit": "本地线下健身会员服务",
+            "profile_check": gate,
+            "priority": 60,
+            "enabled": True,
+        })
+        self.save_registry()
+        self.assertIn(identifier, validator.validate(self.root, REGISTRY_RELATIVE))
+
+    def test_menu_rejects_incomplete_install(self) -> None:
+        for relative in ("yetong/SKILL.md", "yetong/agents/openai.yaml"):
+            destination = self.root / relative
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(PROJECT_ROOT / relative, destination)
+        entry = self.root / "yetong-topic/SKILL.md"
+        entry.rename(entry.with_name("SKILL.md.missing"))
+        result = subprocess.run(
+            [sys.executable, str(PROJECT_ROOT / "yetong/scripts/show_menu.py"), "--root", str(self.root)],
+            capture_output=True, text=True, check=False,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("安装校验未通过", result.stdout)
+        self.assertIn("yetong-topic", result.stdout)
+        self.assertNotIn("安装校验通过：", result.stdout)
+
     def test_private_or_unlisted_file_rejected(self) -> None:
         self.registry["capabilities"][1]["package_files"].append(
-            "yetong-fitness-xhs-topic/evals/private-notes.md"
+            "yetong-topic/evals/private-notes.md"
         )
         self.save_registry()
         with self.assertRaisesRegex(ValueError, "不安全"):

@@ -1,0 +1,4 @@
+interface:
+  display_name: "yetong-review"
+  short_description: "用教练本人档案体检本地会员选题或小红书草稿，给出有依据的最小修改"
+  default_prompt: "使用 $yetong-review，按我的已激活人物档案检查这篇面向本地会员的小红书内容，指出最需要改的地方。"

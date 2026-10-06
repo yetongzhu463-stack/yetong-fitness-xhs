@@ -14,19 +14,22 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 
 ROOT = Path(__file__).resolve().parents[1]
-ARCHIVE_ROOT = "yetong-fitness-xhs-bundle"
-VERSION = "0.2.0-preview"
-REGISTRY_FILE = "yetong-fitness-xhs/references/capability-registry.json"
+ARCHIVE_ROOT = "yetong-bundle"
+VERSION = "0.4.0-preview"
+REGISTRY_FILE = "yetong/references/capability-registry.json"
 CORE_FILES = (
     "LICENSE",
     "README.md",
+    "docs/START_HERE.md",
+    "docs/SKILL_CATALOG.md",
     "packaging/PACKAGE.md",
-    "yetong-fitness-xhs/SKILL.md",
-    "yetong-fitness-xhs/references/LICENSE",
-    "yetong-fitness-xhs/agents/openai.yaml",
-    "yetong-fitness-xhs/references/routing-contract.md",
+    "yetong/SKILL.md",
+    "yetong/references/LICENSE",
+    "yetong/agents/openai.yaml",
+    "yetong/references/routing-contract.md",
     REGISTRY_FILE,
-    "yetong-fitness-xhs/scripts/validate_registry.py",
+    "yetong/scripts/validate_registry.py",
+    "yetong/scripts/show_menu.py",
 )
 BLOCKED_BYTES = (
     b"/Users/",
@@ -47,7 +50,7 @@ def archive_name(source_name: str) -> str:
 
 def registered_files() -> tuple[list[str], list[str]]:
     subprocess.run(
-        [sys.executable, str(ROOT / "yetong-fitness-xhs/scripts/validate_registry.py")],
+        [sys.executable, str(ROOT / "yetong/scripts/validate_registry.py")],
         cwd=ROOT,
         check=True,
         capture_output=True,
@@ -132,12 +135,12 @@ def main() -> None:
     manifest = {
         "bundle": ARCHIVE_ROOT,
         "version": VERSION,
-        "entry_skill": "yetong-fitness-xhs",
-        "required_skills": ["yetong-fitness-xhs", *module_ids],
+        "entry_skill": "yetong",
+        "required_skills": ["yetong", *module_ids],
         "source_fingerprint": fingerprint,
         "files_sha256": file_hashes,
         "excludes": ["private profiles", "source PDF", "real coach test records", "development evals"],
-        "status": "local preview; isolated installation verified; not published",
+        "status": "local preview; install and behavior tests required; not published",
     }
     manifest_data = (json.dumps(manifest, ensure_ascii=False, sort_keys=True, indent=2) + "\n").encode("utf-8")
     output_dir = ROOT / "dist"

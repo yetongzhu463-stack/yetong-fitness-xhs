@@ -1,4 +1,0 @@
-interface:
-  display_name: "yetong-fitness-xhs"
-  short_description: "为本地健身教练的小红书需求选择人物访谈、选题或文案流程"
-  default_prompt: "使用 $yetong-fitness-xhs，围绕我所在城市的线下会员获客，判断该先完善人物档案、定选题还是写单篇文案，并按对应流程继续。"

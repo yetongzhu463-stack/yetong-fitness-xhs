@@ -1,0 +1,4 @@
+interface:
+  display_name: "yetong-title"
+  short_description: "按本地会员顾虑、本人档案和正文证据拟定或优化小红书标题"
+  default_prompt: "使用 $yetong-title，根据我的已激活人物档案和这篇具体选题，给出适合本地潜在会员的标题并推荐一个。"
