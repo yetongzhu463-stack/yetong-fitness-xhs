@@ -1,4 +1,4 @@
 interface:
   display_name: "yetong-dna"
-  short_description: "先短访谈建立本地教练人物 DNA 与客群痛点档案，再按需要深访校准"
-  default_prompt: "使用 $yetong-dna 先用简短访谈建立我的基础人物 DNA 和本地客群痛点档案，缺少的经历以后按需补充。"
+  short_description: "六组问题一次展示，可用一段语音建立本地教练人物 DNA"
+  default_prompt: "使用 $yetong-dna 帮我建立人物档案：一次展示六组建档问题，我可以用一段语音或文字一起回答；整理事实、公开边界和待确认项后再由我确认激活。"
