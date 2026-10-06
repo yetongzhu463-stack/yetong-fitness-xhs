@@ -11,7 +11,7 @@ import tarfile
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -245,6 +245,34 @@ class UpdateTests(unittest.TestCase):
         with self.assertRaisesRegex(updater.UpdateError, "其他名称的技能占用"):
             updater.apply_snapshot(self.target, self.new)
         self.assertEqual(before, self.file_map())
+
+    def test_populated_default_tls_trust_is_unchanged(self) -> None:
+        context = Mock()
+        context.cert_store_stats.return_value = {"x509_ca": 120}
+        with patch.object(updater.ssl, "create_default_context", return_value=context):
+            self.assertIs(updater.trusted_https_context(), context)
+        context.load_verify_locations.assert_not_called()
+
+    def test_empty_default_tls_uses_existing_verified_system_bundle(self) -> None:
+        context = Mock()
+        context.cert_store_stats.side_effect = [{"x509_ca": 0}, {"x509_ca": 120}]
+        with patch.object(updater.ssl, "create_default_context", return_value=context), patch.dict(updater.os.environ, {}, clear=True), patch.object(updater.Path, "is_file", return_value=True):
+            self.assertIs(updater.trusted_https_context(), context)
+        context.load_verify_locations.assert_called_once_with(cafile="/etc/ssl/cert.pem")
+
+    def test_explicit_tls_configuration_is_honored(self) -> None:
+        context = Mock()
+        context.cert_store_stats.return_value = {"x509_ca": 0}
+        with patch.object(updater.ssl, "create_default_context", return_value=context), patch.dict(updater.os.environ, {"SSL_CERT_DIR": "configured-ca-directory"}, clear=True):
+            self.assertIs(updater.trusted_https_context(), context)
+        context.load_verify_locations.assert_not_called()
+
+    def test_no_tls_trust_returns_actionable_error(self) -> None:
+        context = Mock()
+        context.cert_store_stats.return_value = {"x509_ca": 0}
+        with patch.object(updater.ssl, "create_default_context", return_value=context), patch.dict(updater.os.environ, {}, clear=True), patch.object(updater.Path, "is_file", return_value=False):
+            with self.assertRaisesRegex(updater.UpdateError, "不会关闭证书校验"):
+                updater.trusted_https_context()
 
 
 if __name__ == "__main__":

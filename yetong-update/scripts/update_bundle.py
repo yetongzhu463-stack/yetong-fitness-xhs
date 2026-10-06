@@ -10,6 +10,7 @@ import json
 import os
 import re
 import shutil
+import ssl
 import stat
 import subprocess
 import sys
@@ -208,9 +209,29 @@ def validate_payloads(manifest: dict, payloads: dict[str, bytes]) -> None:
                 raise UpdateError(f"运行文档引用未发布文件：{name} -> {target}")
 
 
+def trusted_https_context() -> ssl.SSLContext:
+    context = ssl.create_default_context()
+    if context.cert_store_stats().get("x509_ca", 0) > 0:
+        return context
+    # An explicitly configured CA directory may load its certificates lazily.
+    # Honor that configuration rather than replacing the user's trust policy.
+    if "SSL_CERT_FILE" in os.environ or "SSL_CERT_DIR" in os.environ:
+        return context
+    for bundle in ("/etc/ssl/cert.pem", "/etc/ssl/certs/ca-certificates.crt", "/etc/pki/tls/certs/ca-bundle.crt"):
+        if not Path(bundle).is_file():
+            continue
+        try:
+            context.load_verify_locations(cafile=bundle)
+        except (OSError, ssl.SSLError):
+            continue
+        if context.cert_store_stats().get("x509_ca", 0) > 0:
+            return context
+    raise UpdateError("当前 Python 没有可用的 HTTPS 根证书。请安装 Python 系统证书，或配置可信的 SSL_CERT_FILE／SSL_CERT_DIR 后重试；更新器不会关闭证书校验。")
+
+
 def read_url(url: str, limit: int) -> bytes:
-    request = urllib.request.Request(url, headers={"User-Agent": "YETONG-Skill-Updater/1", "Accept": "application/vnd.github+json"})
-    with urllib.request.urlopen(request, timeout=30) as response:
+    request = urllib.request.Request(url, headers={"User-Agent": "YETONG-Skill-Updater/1", "Accept": "application/vnd.github+json", "Cache-Control": "no-cache"})
+    with urllib.request.urlopen(request, timeout=30, context=trusted_https_context()) as response:
         data = response.read(limit + 1)
     if len(data) > limit:
         raise UpdateError("远端响应超过允许大小")

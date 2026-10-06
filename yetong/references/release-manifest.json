@@ -40,8 +40,8 @@
     "yetong-update/SKILL.md": "e9c18b6929cc3b6a80ed31193bda64f10de38e4c7ed2bd2376d614254ed60736",
     "yetong-update/agents/openai.yaml": "904bf6fdf5f625b88bc100716e142d946607f36526aa8651a9420dec38fc6dc7",
     "yetong-update/references/LICENSE": "397f45869eb64b94eca9a75bdd303b56e695a52ae6186cf8d8a7b5f60555b7e0",
-    "yetong-update/references/update-method.md": "7f925fa1eabbe30dbf1d2ce2fc9cbfe54fd0931ced8d71b1f78904f83653c022",
-    "yetong-update/scripts/update_bundle.py": "07d6f8ff27e8fc70e3f0e166cd4abb0e8793a1c0aaab092e493ae439d80eff5f",
+    "yetong-update/references/update-method.md": "ceda877a13ca6e86e374916994a35bc199b9178837cc09010d8b6039a3b4966d",
+    "yetong-update/scripts/update_bundle.py": "fe458b77c28dcd5e769ca5f597faaac586b39c01acd35dc26551457867a24a22",
     "yetong/SKILL.md": "c9ad9a00e8ede9dc1e0fc08e5199d8ea13ca8d96c4e0559f0a253ef6700c849f",
     "yetong/agents/openai.yaml": "5d1a4d672632a23fc23e6d137a35f1bf9c09031de4ddf854d55452195ba72ace",
     "yetong/references/LICENSE": "397f45869eb64b94eca9a75bdd303b56e695a52ae6186cf8d8a7b5f60555b7e0",
@@ -62,6 +62,6 @@
     "yetong-cover",
     "yetong-update"
   ],
-  "source_fingerprint": "a7dd06868afbdd8bf94b03960bb7c40a0830f2c1ced985b30e5f3983a1861e0e",
-  "version": "0.5.0"
+  "source_fingerprint": "f4ff79c261ab50e06bf97258fc02b504116477f1ff623862a29b6b392fae8c04",
+  "version": "0.5.1"
 }
