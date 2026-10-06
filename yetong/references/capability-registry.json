@@ -129,6 +129,24 @@
       "profile_check": "yetong-cover/scripts/check_profile.py",
       "priority": 80,
       "enabled": true
+    },
+    {
+      "id": "yetong-update",
+      "service_line": "shared",
+      "menu_label": "技能包更新",
+      "menu_trigger": "使用 $yetong-update，更新叶童技能。",
+      "entry": "yetong-update/SKILL.md",
+      "package_files": ["yetong-update/SKILL.md", "yetong-update/references/LICENSE", "yetong-update/agents/openai.yaml", "yetong-update/references/update-method.md", "yetong-update/scripts/update_bundle.py"],
+      "purpose": "检查或更新当前安装的 YETONG 官方技能包，核验版本与资源并保留人物档案和其他技能",
+      "use_when": ["明确要求更新叶童或 YETONG 技能包", "在本套主入口内说‘更新’或‘升级’", "只想查询本包版本或检查是否有新版本"],
+      "avoid_when": ["更新人物档案、城市、课程权益或公开权限", "修改选题、标题、文案或封面内容", "更新 DBS 或其他作者的技能包"],
+      "profile_requirement": "none",
+      "required_any_of": [],
+      "produces": ["bundle_update_status"],
+      "offer_fit": "本套技能包的维护能力；无需人物档案，不改变本地会员业务定位",
+      "profile_check": null,
+      "priority": 100,
+      "enabled": true
     }
   ]
 }

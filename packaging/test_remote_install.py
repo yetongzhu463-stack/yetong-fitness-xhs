@@ -18,17 +18,7 @@ from build_bundle import ARCHIVE_ROOT, collect, registered_files, sha256
 
 
 REPOSITORY = "yetongzhu463-stack/yetong-fitness-xhs"
-SKILL_IDS = (
-    "yetong",
-    "yetong-dna",
-    "yetong-topic",
-    "yetong-copy",
-    "yetong-review",
-    "yetong-title",
-    "yetong-cover",
-)
 MENU_MARKERS = (
-    "安装校验通过：7/7 个 YETONG Skill",
     "小红书内容创作｜已可用",
     "朋友圈营销｜规划中",
     "业绩管理｜规划中",
@@ -51,10 +41,9 @@ def run(command: list[str], cwd: Path, environment: dict[str, str], *, timeout: 
     return result.stdout
 
 
-def expected_skill_hashes() -> dict[str, str]:
+def expected_skill_hashes() -> tuple[tuple[str, ...], dict[str, str]]:
     registered_ids, source_files = registered_files()
-    if set(("yetong", *registered_ids)) != set(SKILL_IDS):
-        raise ValueError("本地登记的 Skill 与七个发布短名不一致")
+    skill_ids = ("yetong", *registered_ids)
 
     prefix = f"{ARCHIVE_ROOT}/"
     expected: dict[str, str] = {}
@@ -62,24 +51,24 @@ def expected_skill_hashes() -> dict[str, str]:
         if not archive_name.startswith(prefix):
             raise ValueError(f"封装白名单含异常归档路径：{archive_name}")
         relative = archive_name[len(prefix):]
-        if relative.split("/", 1)[0] in SKILL_IDS:
+        if relative.split("/", 1)[0] in skill_ids:
             expected[relative] = sha256(content)
-    if {f"{identifier}/SKILL.md" for identifier in SKILL_IDS} - expected.keys():
+    if {f"{identifier}/SKILL.md" for identifier in skill_ids} - expected.keys():
         raise ValueError("本地白名单缺少某个 Skill 入口")
-    return expected
+    return skill_ids, expected
 
 
-def installed_skill_hashes(installed_root: Path) -> dict[str, str]:
+def installed_skill_hashes(installed_root: Path, skill_ids: tuple[str, ...]) -> dict[str, str]:
     if not installed_root.is_dir():
         raise ValueError(f"Codex 项目中没有 Skill 目录：{installed_root}")
     directories = {path.name for path in installed_root.iterdir() if path.is_dir()}
-    if directories != set(SKILL_IDS):
-        missing = sorted(set(SKILL_IDS) - directories)
-        extra = sorted(directories - set(SKILL_IDS))
-        raise ValueError(f"安装目录不是七个短名 Skill：缺少 {missing}；多出 {extra}")
+    if directories != set(skill_ids):
+        missing = sorted(set(skill_ids) - directories)
+        extra = sorted(directories - set(skill_ids))
+        raise ValueError(f"安装目录与本次发布清单不一致：缺少 {missing}；多出 {extra}")
 
     actual: dict[str, str] = {}
-    for identifier in SKILL_IDS:
+    for identifier in skill_ids:
         skill_dir = installed_root / identifier
         if skill_dir.is_symlink():
             raise ValueError(f"--copy 未复制 Skill 目录：{identifier}")
@@ -96,7 +85,7 @@ def installed_skill_hashes(installed_root: Path) -> dict[str, str]:
 
 def main() -> int:
     try:
-        expected = expected_skill_hashes()
+        skill_ids, expected = expected_skill_hashes()
         with tempfile.TemporaryDirectory(prefix="yetong-remote-install-") as temporary:
             workspace = Path(temporary)
             consumer = workspace / "consumer"
@@ -113,7 +102,7 @@ def main() -> int:
                 timeout=300,
             )
             installed_root = consumer / ".agents" / "skills"
-            actual = installed_skill_hashes(installed_root)
+            actual = installed_skill_hashes(installed_root, skill_ids)
             missing = sorted(expected.keys() - actual.keys())
             extra = sorted(actual.keys() - expected.keys())
             changed = sorted(name for name in expected.keys() & actual.keys() if expected[name] != actual[name])
@@ -129,12 +118,13 @@ def main() -> int:
                 environment,
                 timeout=30,
             )
-            for marker in (*MENU_MARKERS, *SKILL_IDS):
+            count_marker = f"安装校验通过：{len(skill_ids)}/{len(skill_ids)} 个 YETONG Skill"
+            for marker in (count_marker, *MENU_MARKERS, *skill_ids):
                 if marker not in menu:
                     raise ValueError(f"安装后菜单缺少必要展示：{marker}")
 
         print(f"远端安装验证通过：{REPOSITORY}")
-        print(f"Codex 项目内安装：{len(SKILL_IDS)} 个短名 Skill；逐文件哈希一致：{len(expected)} 个")
+        print(f"Codex 项目内安装：{len(skill_ids)} 个短名 Skill；逐文件哈希一致：{len(expected)} 个")
         print("三类菜单校验通过；临时项目及 npm 缓存已清理，未执行全局 Skill 安装")
         return 0
     except (OSError, RuntimeError, ValueError, subprocess.TimeoutExpired) as exc:

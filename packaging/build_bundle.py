@@ -15,8 +15,9 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 ROOT = Path(__file__).resolve().parents[1]
 ARCHIVE_ROOT = "yetong-bundle"
-VERSION = "0.4.0-preview"
+VERSION = "0.5.0"
 REGISTRY_FILE = "yetong/references/capability-registry.json"
+RELEASE_FILE = "yetong/references/release-manifest.json"
 CORE_FILES = (
     "LICENSE",
     "README.md",
@@ -28,6 +29,7 @@ CORE_FILES = (
     "yetong/agents/openai.yaml",
     "yetong/references/routing-contract.md",
     REGISTRY_FILE,
+    RELEASE_FILE,
     "yetong/scripts/validate_registry.py",
     "yetong/scripts/show_menu.py",
 )
@@ -105,7 +107,32 @@ def collect(source_files: list[str]) -> dict[str, bytes]:
             relative = resolved.relative_to(ROOT).as_posix()
             if relative not in included:
                 raise ValueError(f"unpackaged Markdown reference: {source_name} -> {target}")
+    validate_release(payloads)
     return payloads
+
+
+def validate_release(payloads: dict[str, bytes]) -> None:
+    release = json.loads(payloads[archive_name(RELEASE_FILE)].decode("utf-8"))
+    registry = json.loads(payloads[archive_name(REGISTRY_FILE)].decode("utf-8"))
+    skills = ["yetong", *[item["id"] for item in registry["capabilities"] if item["enabled"]]]
+    prefix = f"{ARCHIVE_ROOT}/"
+    hashes = {
+        name[len(prefix):]: sha256(data)
+        for name, data in sorted(payloads.items())
+        if name != archive_name(RELEASE_FILE) and name[len(prefix):].split("/", 1)[0] in skills
+    }
+    expected = {
+        "schema_version": 1,
+        "repository": "yetongzhu463-stack/yetong-fitness-xhs",
+        "branch": "main",
+        "version": VERSION,
+        "entry_skill": "yetong",
+        "skills": skills,
+        "files_sha256": hashes,
+        "source_fingerprint": sha256(json.dumps(hashes, sort_keys=True).encode("utf-8")),
+    }
+    if release != expected:
+        raise ValueError("发布清单与运行文件不一致；先运行 packaging/build_release_manifest.py")
 
 
 def zip_info(name: str) -> ZipInfo:

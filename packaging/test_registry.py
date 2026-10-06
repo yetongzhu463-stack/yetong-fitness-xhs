@@ -42,11 +42,11 @@ class RegistryTests(unittest.TestCase):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(self.registry, ensure_ascii=False), encoding="utf-8")
 
-    def test_current_six_modules_have_short_ids_and_content_line(self) -> None:
+    def test_current_modules_have_short_ids_and_content_line(self) -> None:
         enabled = validator.validate(self.root, REGISTRY_RELATIVE)
         self.assertEqual(set(enabled), {
             "yetong-dna", "yetong-topic", "yetong-copy", "yetong-review",
-            "yetong-title", "yetong-cover",
+            "yetong-title", "yetong-cover", "yetong-update",
         })
         lines = {item["id"]: item for item in self.registry["service_lines"]}
         self.assertEqual(set(lines), {"content", "moments", "performance"})
@@ -57,6 +57,10 @@ class RegistryTests(unittest.TestCase):
             self.assertIn(item["service_line"], {"shared", "content"})
             self.assertIn(f"${item['id']}", item["menu_trigger"])
         self.assertEqual(self.registry["capabilities"][0]["service_line"], "shared")
+        update = next(item for item in self.registry["capabilities"] if item["id"] == "yetong-update")
+        self.assertEqual(update["service_line"], "shared")
+        self.assertEqual(update["profile_requirement"], "none")
+        self.assertIsNone(update["profile_check"])
 
     def test_future_module_registers_without_router_edit(self) -> None:
         identifier = "yetong-risk"
@@ -96,6 +100,20 @@ class RegistryTests(unittest.TestCase):
         self.registry["capabilities"].append(dict(self.registry["capabilities"][0]))
         self.save_registry()
         with self.assertRaisesRegex(ValueError, "重复"):
+            validator.validate(self.root, REGISTRY_RELATIVE)
+
+    def test_disabled_module_may_be_absent_from_runtime(self) -> None:
+        item = next(value for value in self.registry["capabilities"] if value["id"] == "yetong-cover")
+        item["enabled"] = False
+        shutil.rmtree(self.root / item["id"])
+        self.save_registry()
+        self.assertNotIn(item["id"], validator.validate(self.root, REGISTRY_RELATIVE))
+
+    def test_disabled_profile_producer_cannot_leave_no_interview(self) -> None:
+        item = next(value for value in self.registry["capabilities"] if value["id"] == "yetong-dna")
+        item["enabled"] = False
+        self.save_registry()
+        with self.assertRaisesRegex(ValueError, "active_profile"):
             validator.validate(self.root, REGISTRY_RELATIVE)
 
     def test_missing_profile_gate_rejected(self) -> None:

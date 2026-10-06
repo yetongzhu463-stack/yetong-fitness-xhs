@@ -24,10 +24,15 @@ LINE_IDS = {"content", "moments", "performance"}
 BLOCKED_PATH_PARTS = {"private-profiles", "tmp", "dist", "evals"}
 
 
-def safe_file(root: Path, relative: str) -> Path:
+def safe_relative(relative: str) -> Path:
     path = Path(relative)
     if path.is_absolute() or ".." in path.parts or any(part in BLOCKED_PATH_PARTS for part in path.parts):
         raise ValueError(f"不安全的相对路径：{relative}")
+    return path
+
+
+def safe_file(root: Path, relative: str) -> Path:
+    path = safe_relative(relative)
     candidate = root / path
     if candidate.is_symlink() or not candidate.is_file() or root not in candidate.resolve().parents:
         raise ValueError(f"文件不存在或越出运行包：{relative}")
@@ -93,6 +98,8 @@ def validate(root: Path, registry_relative: str) -> list[str]:
         if not isinstance(identifier, str) or not SLUG.fullmatch(identifier) or identifier in seen:
             raise ValueError(f"{label} id 无效或重复：{identifier}")
         seen.add(identifier)
+        if type(item["enabled"]) is not bool:
+            raise ValueError(f"{identifier} 的 enabled 必须为布尔值")
         service_line = item["service_line"]
         if service_line != "shared" and service_line not in lines:
             raise ValueError(f"{identifier} 的 service_line 未登记")
@@ -104,8 +111,8 @@ def validate(root: Path, registry_relative: str) -> list[str]:
         entry = item["entry"]
         if not isinstance(entry, str) or entry != f"{identifier}/SKILL.md":
             raise ValueError(f"{identifier} 的 entry 必须指向同名目录的 SKILL.md")
-        entry_path = safe_file(root, entry)
-        if skill_name(entry_path) != identifier:
+        safe_relative(entry)
+        if item["enabled"] and skill_name(safe_file(root, entry)) != identifier:
             raise ValueError(f"{identifier} 的目录、登记名与 frontmatter name 不一致")
         package_files = item["package_files"]
         nonempty_strings(package_files, f"{identifier}.package_files")
@@ -114,7 +121,9 @@ def validate(root: Path, registry_relative: str) -> list[str]:
         for package_file in package_files:
             if not package_file.startswith(f"{identifier}/"):
                 raise ValueError(f"{identifier} 的 package_files 含其他模块文件")
-            safe_file(root, package_file)
+            safe_relative(package_file)
+            if item["enabled"]:
+                safe_file(root, package_file)
         for field in ("purpose", "offer_fit"):
             if not isinstance(item[field], str) or not item[field].strip():
                 raise ValueError(f"{identifier} 的 {field} 不能为空")
@@ -128,18 +137,18 @@ def validate(root: Path, registry_relative: str) -> list[str]:
         if item["profile_requirement"] in {"active", "optional"}:
             if not isinstance(check, str) or not check.startswith(f"{identifier}/scripts/"):
                 raise ValueError(f"{identifier} 需要自己的激活档案预检脚本")
-            safe_file(root, check)
+            safe_relative(check)
+            if item["enabled"]:
+                safe_file(root, check)
             if check not in package_files:
                 raise ValueError(f"{identifier} 的 package_files 遗漏档案预检脚本")
         elif check is not None:
             raise ValueError(f"{identifier} 未要求 active 档案，不应填写 profile_check")
         if type(item["priority"]) is not int or not 0 <= item["priority"] <= 100:
             raise ValueError(f"{identifier} 的 priority 必须在 0—100")
-        if type(item["enabled"]) is not bool:
-            raise ValueError(f"{identifier} 的 enabled 必须为布尔值")
         if item["enabled"] and service_line != "shared" and lines[service_line] != "active":
             raise ValueError(f"{identifier} 属于规划中服务线，不能标为可用")
-        if "active_profile" in item["produces"]:
+        if item["enabled"] and "active_profile" in item["produces"]:
             profile_producers += 1
             if item["profile_requirement"] != "none":
                 raise ValueError("建档模块不能要求预先拥有 active 档案")

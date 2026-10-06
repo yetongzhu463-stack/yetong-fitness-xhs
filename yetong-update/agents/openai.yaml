@@ -1,0 +1,4 @@
+interface:
+  display_name: "yetong-update"
+  short_description: "检查并更新本实例的叶童技能，保留人物档案与其他技能"
+  default_prompt: "使用 $yetong-update 更新当前已安装的叶童技能组，核验真实安装文件并报告版本、备份和新增技能。"
