@@ -13,7 +13,7 @@ OPENING = (
     "请回答下面几组问题，可以一起答，口语就行，但一定要越详细越好，我来整理。"
     "稍微要有点耐心，这会决定以后你的文案质量。"
 )
-CONTENT_SKILLS = ("yetong-topic", "yetong-copy", "yetong-title", "yetong-review", "yetong-cover")
+CONTENT_SKILLS = ("yetong-topic", "yetong-copy", "yetong-title", "yetong-review", "yetong-cover", "yetong-promo")
 
 
 class DnaOnboardingTests(unittest.TestCase):

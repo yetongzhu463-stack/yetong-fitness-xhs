@@ -1,4 +1,4 @@
 interface:
   display_name: "yetong-cover"
-  short_description: "用本人真实素材设计封面，并接续提示词优化或授权成图"
-  default_prompt: "使用 $yetong-cover，根据我已确定的本地会员选题和人物档案设计封面；给出可用提示词后，询问我要直接生成还是继续优化。"
+  short_description: "执行叶童原版单题选择流程，用本人参考图设计真人封面"
+  default_prompt: "使用 $yetong-cover，核验我的已激活人物档案后，为已确定的本地会员选题执行叶童原版封面流程，一次只问一个未确认的问题；沿用我已给的信息，缺图1时等我上传，不用海报替代。完成提示词与排版清单后，询问我要直接生成还是继续优化。"

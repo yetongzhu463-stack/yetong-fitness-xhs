@@ -1,0 +1,4 @@
+interface:
+  display_name: "yetong-promo"
+  short_description: "按本人 DNA 与真实课程，梳理客群卖点并安排每天朋友圈营销"
+  default_prompt: "使用 $yetong-promo，根据我已激活的人物 DNA 和课程事实，梳理本地客群、课程优势与每天的朋友圈推广文案。"

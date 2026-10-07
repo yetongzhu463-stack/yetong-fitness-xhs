@@ -20,7 +20,7 @@ from build_bundle import ARCHIVE_ROOT, collect, registered_files, sha256
 REPOSITORY = "yetongzhu463-stack/yetong-fitness-xhs"
 MENU_MARKERS = (
     "小红书内容创作｜已可用",
-    "朋友圈营销｜规划中",
+    "朋友圈营销｜已可用",
     "业绩管理｜规划中",
 )
 

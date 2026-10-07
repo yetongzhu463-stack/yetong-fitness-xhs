@@ -42,25 +42,46 @@ class RegistryTests(unittest.TestCase):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(self.registry, ensure_ascii=False), encoding="utf-8")
 
-    def test_current_modules_have_short_ids_and_content_line(self) -> None:
+    def test_current_modules_have_short_ids_and_service_lines(self) -> None:
         enabled = validator.validate(self.root, REGISTRY_RELATIVE)
         self.assertEqual(set(enabled), {
             "yetong-dna", "yetong-topic", "yetong-copy", "yetong-review",
-            "yetong-title", "yetong-cover", "yetong-update",
+            "yetong-title", "yetong-cover", "yetong-promo", "yetong-update",
         })
         lines = {item["id"]: item for item in self.registry["service_lines"]}
         self.assertEqual(set(lines), {"content", "moments", "performance"})
         self.assertEqual(lines["content"]["status"], "active")
-        self.assertEqual(lines["moments"]["status"], "planned")
+        self.assertEqual(lines["moments"]["status"], "active")
         self.assertEqual(lines["performance"]["status"], "planned")
         for item in self.registry["capabilities"]:
-            self.assertIn(item["service_line"], {"shared", "content"})
+            self.assertIn(item["service_line"], {"shared", "content", "moments"})
             self.assertIn(f"${item['id']}", item["menu_trigger"])
         self.assertEqual(self.registry["capabilities"][0]["service_line"], "shared")
         update = next(item for item in self.registry["capabilities"] if item["id"] == "yetong-update")
         self.assertEqual(update["service_line"], "shared")
         self.assertEqual(update["profile_requirement"], "none")
         self.assertIsNone(update["profile_check"])
+
+    def test_course_promo_has_separate_inputs_and_profile_gate(self) -> None:
+        promo = next(item for item in self.registry["capabilities"] if item["id"] == "yetong-promo")
+        self.assertEqual(promo["service_line"], "moments")
+        self.assertEqual(promo["profile_requirement"], "active")
+        self.assertEqual(promo["profile_check"], "yetong-promo/scripts/check_profile.py")
+        self.assertEqual(set(promo["required_any_of"]), {
+            "product_brief", "existing_promo_plan", "existing_moments_draft",
+        })
+        self.assertEqual(set(promo["produces"]), {
+            "product_positioning", "moments_campaign_plan", "moments_copy_recommendations",
+        })
+        self.assertIn(promo["profile_check"], promo["package_files"])
+        self.assertTrue(any("小红书" in example for example in promo["avoid_when"]))
+
+    def test_active_moments_line_cannot_lose_only_specialist(self) -> None:
+        promo = next(item for item in self.registry["capabilities"] if item["id"] == "yetong-promo")
+        promo["enabled"] = False
+        self.save_registry()
+        with self.assertRaisesRegex(ValueError, "moments.*没有启用"):
+            validator.validate(self.root, REGISTRY_RELATIVE)
 
     def test_future_module_registers_without_router_edit(self) -> None:
         identifier = "yetong-risk"
@@ -123,12 +144,15 @@ class RegistryTests(unittest.TestCase):
             validator.validate(self.root, REGISTRY_RELATIVE)
 
     def test_planned_service_line_cannot_claim_enabled_skill(self) -> None:
-        self.registry["capabilities"][1]["service_line"] = "moments"
+        self.registry["capabilities"][1]["service_line"] = "performance"
         self.save_registry()
         with self.assertRaisesRegex(ValueError, "规划中"):
             validator.validate(self.root, REGISTRY_RELATIVE)
 
     def test_future_moments_module_activates_its_service_line(self) -> None:
+        # Preserve the planned -> active contract with a different future module.
+        next(item for item in self.registry["capabilities"] if item["id"] == "yetong-promo")["enabled"] = False
+        self.registry["service_lines"][1]["status"] = "planned"
         identifier = "yetong-moments"
         entry = f"{identifier}/SKILL.md"
         skill_path = self.root / entry
