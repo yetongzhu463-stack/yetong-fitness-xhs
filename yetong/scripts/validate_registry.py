@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -11,6 +12,12 @@ from pathlib import Path
 
 DEFAULT_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_REGISTRY = "yetong/references/capability-registry.json"
+DEFAULT_MANIFEST = "yetong/references/release-manifest.json"
+CORE_RUNTIME_FILES = {
+    "yetong/SKILL.md", "yetong/agents/openai.yaml", "yetong/references/LICENSE",
+    "yetong/references/routing-contract.md", DEFAULT_REGISTRY,
+    "yetong/scripts/show_menu.py", "yetong/scripts/validate_registry.py",
+}
 SLUG = re.compile(r"^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$")
 FRONTMATTER_NAME = re.compile(r"\A---\s*\n(?P<block>.*?)\n---\s*\n", re.DOTALL)
 ALLOWED_PROFILE_REQUIREMENTS = {"none", "optional", "active"}
@@ -25,6 +32,8 @@ BLOCKED_PATH_PARTS = {"private-profiles", "tmp", "dist", "evals"}
 
 
 def safe_relative(relative: str) -> Path:
+    if not isinstance(relative, str) or not relative or "\\" in relative or "\x00" in relative or any(part in {"", ".", ".."} for part in relative.split("/")):
+        raise ValueError(f"不安全的相对路径：{relative}")
     path = Path(relative)
     if path.is_absolute() or ".." in path.parts or any(part in BLOCKED_PATH_PARTS for part in path.parts):
         raise ValueError(f"不安全的相对路径：{relative}")
@@ -73,12 +82,12 @@ def validate(root: Path, registry_relative: str) -> list[str]:
         if not isinstance(line, dict) or set(line) != LINE_KEYS:
             raise ValueError(f"service_lines[{index}] 字段与登记契约不一致")
         identifier = line["id"]
-        if identifier not in LINE_IDS or identifier in lines:
+        if not isinstance(identifier, str) or identifier not in LINE_IDS or identifier in lines:
             raise ValueError(f"service_lines[{index}] id 无效或重复")
         for field in ("label", "description"):
             if not isinstance(line[field], str) or not line[field].strip():
                 raise ValueError(f"{identifier}.{field} 不能为空")
-        if line["status"] not in {"active", "planned"}:
+        if not isinstance(line["status"], str) or line["status"] not in {"active", "planned"}:
             raise ValueError(f"{identifier}.status 无效")
         lines[identifier] = line["status"]
     if set(lines) != LINE_IDS:
@@ -101,7 +110,7 @@ def validate(root: Path, registry_relative: str) -> list[str]:
         if type(item["enabled"]) is not bool:
             raise ValueError(f"{identifier} 的 enabled 必须为布尔值")
         service_line = item["service_line"]
-        if service_line != "shared" and service_line not in lines:
+        if not isinstance(service_line, str) or (service_line != "shared" and service_line not in lines):
             raise ValueError(f"{identifier} 的 service_line 未登记")
         for field in ("menu_label", "menu_trigger"):
             if not isinstance(item[field], str) or not item[field].strip():
@@ -131,7 +140,7 @@ def validate(root: Path, registry_relative: str) -> list[str]:
         nonempty_strings(item["avoid_when"], f"{identifier}.avoid_when", allow_empty=True)
         nonempty_strings(item["required_any_of"], f"{identifier}.required_any_of", allow_empty=True)
         nonempty_strings(item["produces"], f"{identifier}.produces")
-        if item["profile_requirement"] not in ALLOWED_PROFILE_REQUIREMENTS:
+        if not isinstance(item["profile_requirement"], str) or item["profile_requirement"] not in ALLOWED_PROFILE_REQUIREMENTS:
             raise ValueError(f"{identifier} 的 profile_requirement 无效")
         check = item["profile_check"]
         if item["profile_requirement"] in {"active", "optional"}:
@@ -164,6 +173,36 @@ def validate(root: Path, registry_relative: str) -> list[str]:
     return enabled
 
 
+def validate_runtime(root: Path, enabled: list[str]) -> str:
+    """Verify published files, not the host's discovery or persistence state."""
+    root = root.resolve()
+    manifest = json.loads(safe_file(root, DEFAULT_MANIFEST).read_text(encoding="utf-8"))
+    registry = json.loads(safe_file(root, DEFAULT_REGISTRY).read_text(encoding="utf-8"))
+    if not isinstance(manifest, dict) or manifest.get("schema_version") != 1 or manifest.get("repository") != "yetongzhu463-stack/yetong-fitness-xhs" or manifest.get("branch") != "main" or manifest.get("entry_skill") != "yetong":
+        raise ValueError("发布清单与官方运行包契约不一致")
+    version = manifest.get("version")
+    if not isinstance(version, str) or not version.strip():
+        raise ValueError("发布清单缺少版本")
+    if manifest.get("skills") != ["yetong", *enabled]:
+        raise ValueError("发布清单与登记表技能成员不一致")
+    expected = set(CORE_RUNTIME_FILES)
+    for item in registry["capabilities"]:
+        if item["enabled"]:
+            expected.update(item["package_files"])
+    hashes = manifest.get("files_sha256")
+    if not isinstance(hashes, dict) or set(hashes) != expected:
+        raise ValueError("发布清单与登记的完整运行文件集合不一致")
+    for relative, digest in hashes.items():
+        if not isinstance(digest, str) or re.fullmatch(r"[0-9a-f]{64}", digest) is None:
+            raise ValueError(f"发布清单文件哈希无效：{relative}")
+        if hashlib.sha256(safe_file(root, relative).read_bytes()).hexdigest() != digest:
+            raise ValueError(f"运行文件哈希不匹配：{relative}")
+    fingerprint = hashlib.sha256(json.dumps(hashes, sort_keys=True).encode("utf-8")).hexdigest()
+    if manifest.get("source_fingerprint") != fingerprint:
+        raise ValueError("发布清单内容指纹不匹配")
+    return version
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="校验 YETONG 主入口能力登记表")
     parser.add_argument("--root", type=Path, default=DEFAULT_ROOT)
@@ -174,7 +213,7 @@ def main() -> int:
     except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as exc:
         print(f"ERROR：{exc}")
         return 1
-    print(f"登记校验通过：{len(enabled)} 个可用模块")
+    print(f"登记结构与文件存在性校验通过：{len(enabled)} 个已启用模块；不代表宿主已发现、实际调用或跨会话持久保存")
     for identifier in enabled:
         print(f"- {identifier}")
     return 0

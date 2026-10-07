@@ -123,6 +123,8 @@ description: 为服务本地线下会员的健身教练建立人物 DNA。用户
 4. 不把人物档案、访谈原文或私密案例写入本 Skill 目录。
 5. 写入后运行：
 
+   从本 Skill 所在目录运行以下命令，或使用脚本的真实绝对路径；不把用户项目当前目录当作 Skill 目录。
+
    ```bash
    python3 scripts/validate_profile.py /path/to/person-dna.md
    ```

@@ -17,7 +17,7 @@ description: 为健身教练写吸引其所在地线下会员、具有本人特�
 
 可选输入：本人原创旧稿、语音口述、想展示的照片或记录、图文／口播形式、期望长度。没有足够的本人语言样本时可以出“待本人校准的试稿”，不得宣称已经完全复刻其文风。
 
-先运行 `python3 scripts/check_profile.py <person-dna.md>`，再按 [人物与文风读取规则](references/voice-and-evidence.md) 审核每条事实和公开权限。仅 `status: active` 可使用个人经历、城市、会员故事或口吻。未激活、找不到或无法读取时原样提示：
+先从本 Skill 所在目录运行 `python3 scripts/check_profile.py <person-dna.md>`，或使用脚本的真实绝对路径；不把用户项目当前目录当作 Skill 目录。再按 [人物与文风读取规则](references/voice-and-evidence.md) 审核每条事实和公开权限。仅 `status: active` 可使用个人经历、城市、会员故事或口吻。未激活、找不到或无法读取时原样提示：
 
 > 人物 DNA 尚未激活。当前只能调用通用方法，无法启用个性化选题、真实经历映射与个人表达校准。完成「人物底色访谈」并确认档案后，才能解锁完整的叶童内容方法引擎。
 

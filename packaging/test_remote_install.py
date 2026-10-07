@@ -19,8 +19,8 @@ from build_bundle import ARCHIVE_ROOT, collect, registered_files, sha256
 
 REPOSITORY = "yetongzhu463-stack/yetong-fitness-xhs"
 MENU_MARKERS = (
-    "小红书内容创作｜已可用",
-    "朋友圈营销｜已可用",
+    "小红书内容创作｜已交付（文件已核验）",
+    "朋友圈营销｜已交付（文件已核验）",
     "业绩管理｜规划中",
 )
 
@@ -118,7 +118,7 @@ def main() -> int:
                 environment,
                 timeout=30,
             )
-            count_marker = f"安装校验通过：{len(skill_ids)}/{len(skill_ids)} 个 YETONG Skill"
+            count_marker = f"运行文件校验通过：{len(skill_ids)}/{len(skill_ids)} 个 YETONG Skill"
             for marker in (count_marker, *MENU_MARKERS, *skill_ids):
                 if marker not in menu:
                     raise ValueError(f"安装后菜单缺少必要展示：{marker}")

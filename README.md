@@ -2,7 +2,7 @@
 
 YETONG 面向**主要服务本地线下会员**的健身教练。当前本地技能组包含小红书内容创作、每日热点选题，以及具体课程产品的朋友圈营销策划与文案：先建立经本人确认的人物档案，再围绕所在地的会员顾虑，完成适合当前平台和产品的内容。可以通过泛曝光建立专业信任，不要求每篇强卖课；它不教同行获客，不面向全国线上招生，也不承诺播放量、咨询量或训练效果。
 
-本包版本为 `0.9.0`，包含 10 个 Skill，新增 `yetong-timer` 每日热点选题。安装或更新后仍须在当前 Agent 检查菜单和资源；版本说明不代表手机云端或当前设备已安装，也不代表后台定时任务已创建。
+本次发布版本为 `0.9.1`，仍包含 10 个 Skill。本次加固官方更新通道、完整资源哈希检查、中文安装验收与宿主加载／持久状态说明。安装或更新后仍须在当前 Agent 检查菜单和资源；版本说明不代表手机云端或当前设备已安装，也不代表后台定时任务已创建。远端实际版本以 GitHub 发布清单为准。
 
 项目采用 [MIT 许可证](LICENSE)，作者已同意公开本项目自行提炼的内容框架地图。原课程 PDF 及右侧完整示例文案不在项目或许可证范围内。
 
@@ -33,13 +33,15 @@ YETONG 面向**主要服务本地线下会员**的健身教练。当前本地技
 
 ## 安装
 
-需要 Node.js／`npx` 和能运行 Python 3.9 或更新版本的 Agent 环境。以下命令安装 GitHub 主分支的当前版本；安装完成后请核对版本 `0.9.0`、10 个 Skill 和资源完整性，不把旧任务中的缓存菜单当作最新版：
+安装命令没有写死 YETONG 版本号；只要仓库地址不变，以后仍可使用同一条命令取得 GitHub `main` 当时已发布的版本。YETONG 运行脚本需要 Python 3.9 或更新版本；命令安装另需可用的 Node.js／`npx`、Git、联网和目录权限。2026-10-07 核验的 [skills CLI 1.7.1](https://registry.npmjs.org/skills/latest) 要求 Node.js ≥22.20.0；Agent 应检查当前安装器的实际运行要求，不要把低版本报错当作本包损坏。安装后核对本次远端清单版本、登记数量和完整文件哈希，不把缓存菜单当作最新版。
+
+这条命令主要用于首次安装；已有同名 Skill 时，原安装器可能清空同名目录后重建，**不具有本包更新器的未知文件保护**。先核对当前安装归属、备份同名目录，确认私人档案放在包外；已有 `yetong-update` 的实例优先使用包内安全更新。
 
 ```bash
 npx -y skills add yetongzhu463-stack/yetong-fitness-xhs -g --all
 ```
 
-`-g --all` 会尝试安装到安装器所支持的 Agent 的全局 Skill 目录；具体手机云端 Agent 是否允许执行命令、是否持久保存 Skill，取决于该平台，不能仅凭安装指令保证。若只想安装到 Codex，可运行：
+`--all` 是选择安装器已支持的全部 Skill 和全部 Agent，并跳过选择提示；`-g` 指执行机器的用户级目录，不是手机账号级永久保存。它不等于自动适配所有云端产品。请保留代码块中的 ASCII 短横线，不把 `-y`、`-g`、`--all` 改成排版长横杠。若只想安装到 Codex，可运行：
 
 ```bash
 npx -y skills add yetongzhu463-stack/yetong-fitness-xhs -g -a codex --skill '*' -y
@@ -47,9 +49,13 @@ npx -y skills add yetongzhu463-stack/yetong-fitness-xhs -g -a codex --skill '*' 
 
 若是在支持执行安装任务的 Agent 对话中，可以直接发送一句话：
 
-> 请从 GitHub 仓库 `yetongzhu463-stack/yetong-fitness-xhs` 安装全部 YETONG Skill；安装后按当前能力登记表逐个核对 `SKILL.md` 和必要资源，再调用 `yetong` 展示三类菜单。若当前环境不支持安装或不能持久保存，请直接说明，不要把读到仓库页面当作安装成功。
+> 请全程用中文，将官方仓库 `yetongzhu463-stack/yetong-fitness-xhs` 的全部 YETONG 技能实际安装到当前环境支持的技能库；首次安装可执行 `npx -y skills add yetongzhu463-stack/yetong-fitness-xhs -g --all`，已有同名目录先核对归属与备份。返回真实执行结果、安装或注册位置，并核对远端版本、完整资源和当前宿主技能列表，再使用 `yetong` 展示三类菜单。只说准备安装或只读网页不算完成；加载及跨任务保存未核验就标未验证，不能执行时说明具体缺口。
 
-这句话是**安装与验收请求**，不是所有平台通用的安装接口。[skills CLI 的 Agent 支持清单](https://www.skills.sh/agent)未列豆包或 WorkBuddy。豆包普通手机端是否能导入第三方 GitHub Skill，尚无可据的官方保证；[火山引擎 AgentKit 的 Skill 能力](https://docs.volcengine.com/docs/agentkit/create_skills?lang=zh)也不等于豆包 App 已开放同一安装方式。WorkBuddy [桌面端支持上传本地技能包](https://www.workbuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market)；[手机连接电脑模式](https://www.workbuddy.cn/docs/workbuddyapp/features/Multidevice)可调用电脑上已启用的技能，而[独立云端任务使用独立的云端技能库](https://cloud.tencent.com/document/product/1831/138797)。本仓库尚未在豆包手机云端或 WorkBuddy 云端完成实机安装验证。
+这句话是**安装与验收请求**，不是所有平台通用的安装接口。当前 [skills CLI 发布版适配表](https://github.com/vercel-labs/skills/blob/958f4b7389ba698b0a6a26a1e505ae2af82364d2/src/agents.ts)没有豆包、WorkBuddy 原生条目；CodeBuddy 是另一个适配项，不能混同。缺少 CLI 适配不等于这两个产品不能使用 Skill。
+
+WorkBuddy [手机小程序支持添加技能，并从 SkillHub 复制指令安装](https://www.codebuddy.cn/docs/workbuddymini/features/Attachments-and-Skills)；[连接电脑模式](https://www.codebuddy.cn/docs/workbuddymini/features/Multidevice)使用电脑已安装且启用的技能；[桌面端](https://www.codebuddy.cn/docs/workbuddy/From-Beginner-to-Expert-Guide/Function-Description/Skills-Market)可上传本地技能包。应在当前模式核对文件与技能列表，不把电脑安装当作独立云端已保存。[豆包官方工作任务须知](https://www.doubao.com/legal/DoubaoAgentModeNotice)支持官方／自定义／企业／本地技能，但本地技能不自动上云；当前任务是否支持 GitHub 导入、补装后的加载与持久范围须分别核验。YETONG 新版尚未在这两个手机独立云端完成端到端验收。
+
+截图或教程中的 [vercel-labs/skills](https://github.com/vercel-labs/skills) 是安装工具说明，**不是叶童技能包的仓库**。本包来源始终是 [yetongzhu463-stack/yetong-fitness-xhs](https://github.com/yetongzhu463-stack/yetong-fitness-xhs)；打开公开仓库网页不是安装，也不要求为浏览或公共读取先登录 GitHub。
 
 ## 首次使用
 
@@ -83,9 +89,17 @@ npx -y skills add yetongzhu463-stack/yetong-fitness-xhs -g -a codex --skill '*' 
 
 已安装 `yetong-update` 后，直接说“更新叶童技能”；在 YETONG 主入口任务中也可以只说“更新”。只想知道有没有新版，说“检查叶童技能更新”，它会只检查版本。人物档案、城市或文案里的“更新”仍归相应模块处理。
 
-更新模块读取本仓库 `main` 的发布清单，从固定提交下载已登记运行文件，核对哈希后更新**当前这一套安装**。新增的已登记技能随清单一起加入；包外人物档案、其他作者技能和未受管文件保留。更新前保留备份，失败时恢复本次改动。成功后新建一次对话，再让主入口检查菜单。它不会顺便更新其他技能包，也不自动扩大到另一台设备或另一套 Agent 安装。
+更新模块读取本仓库 `main` 的发布清单，从固定提交下载已登记运行文件，核对哈希后更新**当前这一套安装**。API 失败时通过官方归档的提交元数据回退，再重新取得不可变快照；不需要账号密钥，也不关闭 HTTPS 校验。新增的已登记技能随清单一起加入；包外人物档案、其他作者技能和未受管文件保留。更新前保留备份，失败时恢复本次改动。菜单校验只证明完整文件与哈希，宿主加载和跨会话持久状态另外核验；仅按宿主支持的方式刷新／启用或新建对话，不保证重开必然加载。它不会顺便更新其他技能包，也不自动扩大到另一台设备或另一套 Agent 安装。
 
-旧七技能版没有此模块，需要先重新运行上面的原安装命令一次。安装方式由平台管理、不能执行 Python、不能联网或没有持久可写 Skill 目录时，更新模块会说明实际限制并给出平台导入步骤，不能保证豆包／WorkBuddy 云端一句话持久更新。
+旧版没有此模块，或老更新器只有 API 通道且被限流时，可以用原安装方式重新导入；但必须先核对同名目录归属、备份现有内容，确认私人档案在包外。原安装器会重建同名目录，不应拿它替代安全更新的保护承诺。安装方式由平台管理、不能执行 Python、不能联网或没有持久可写 Skill 目录时，更新模块会说明实际限制并给出已核实的宿主导入入口，不能保证豆包／WorkBuddy 云端一句话持久更新。
+
+## 常见安装与更新现象
+
+- 只有英文“我会帮你安装／开始执行”：尚未看到命令结果，不足以判断安装成功或失败。让当前 Agent 全程中文返回实际执行、安装位置和文件／加载结果；没有工具时直接报告不能执行，不能以准备话术结束任务。
+- “业绩管理规划中／泛朋友圈尚未覆盖”：这是产品范围说明，不是安装故障，不用反复重装，也不存在可补装的 `yetong-performance` 模块。
+- 文件全部校验通过但当前技能列表没有入口：文件完整与宿主加载是两层状态。按当前平台确实提供的入口启用或刷新；没有证据时不编造重扫指令，不承诺跨会话永久可用。
+- HTTP 403：只有明确 `rate limit` 等依据才判断限流，其他 403 也可能来自权限策略。新版更新器会尝试官方备用通道，均不可达则停止、保留旧安装并报告具体渠道；不估计恢复时间，不擅自创建更新定时任务。
+- Python 找不到 `scripts/...`：从对应 Skill 目录运行，或用脚本的真实绝对路径，不在用户项目目录照抄相对路径。
 
 维护者每次新增或修改技能后，依次运行 `python3 packaging/build_release_manifest.py`、`python3 packaging/build_release_manifest.py --check`、相关校验与打包，再将运行文件和发布清单一起推送到现有 GitHub 仓库。更新清单不包含私人档案或课程 PDF。
 

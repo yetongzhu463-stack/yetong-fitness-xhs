@@ -4,7 +4,9 @@
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
+import http.client
 import io
 import json
 import os
@@ -17,6 +19,7 @@ import sys
 import tarfile
 import tempfile
 import urllib.request
+import zlib
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from urllib.parse import unquote
@@ -139,6 +142,8 @@ def validate_payloads(manifest: dict, payloads: dict[str, bytes]) -> None:
     lines = registry.get("service_lines")
     if not isinstance(lines, list) or len(lines) != 3 or any(not isinstance(line, dict) for line in lines):
         raise UpdateError("能力登记表缺少三条服务线")
+    if any(not isinstance(line.get("id"), str) or not isinstance(line.get("status"), str) for line in lines):
+        raise UpdateError("能力登记表服务线 id 和 status 必须为字符串")
     statuses = {line.get("id"): line.get("status") for line in lines}
     if set(statuses) != {"content", "moments", "performance"} or any(status not in {"active", "planned"} for status in statuses.values()):
         raise UpdateError("能力登记表服务线状态无效")
@@ -160,7 +165,7 @@ def validate_payloads(manifest: dict, payloads: dict[str, bytes]) -> None:
             if relative_path(name).parts[0] != identifier or (item["enabled"] and name not in hashes):
                 raise UpdateError(f"能力文件未发布或越界：{name}")
         requirement = item.get("profile_requirement")
-        if requirement not in {"none", "optional", "active"}:
+        if not isinstance(requirement, str) or requirement not in {"none", "optional", "active"}:
             raise UpdateError(f"人物门槛无效：{identifier}")
         if requirement in {"active", "optional"}:
             gate = item.get("profile_check")
@@ -169,13 +174,16 @@ def validate_payloads(manifest: dict, payloads: dict[str, bytes]) -> None:
         elif item.get("profile_check") is not None:
             raise UpdateError(f"无需人物门槛的能力声明了检查脚本：{identifier}")
         service_line = item.get("service_line")
-        if service_line != "shared" and service_line not in statuses:
+        if not isinstance(service_line, str) or (service_line != "shared" and service_line not in statuses):
             raise UpdateError(f"能力声明了未登记服务线：{identifier}")
+        produces = item.get("produces", [])
+        if not isinstance(produces, list) or any(not isinstance(value, str) for value in produces):
+            raise UpdateError(f"能力产出列表无效：{identifier}")
         if item["enabled"]:
             if service_line != "shared" and statuses[service_line] != "active":
                 raise UpdateError(f"规划中服务线不能启用模块：{identifier}")
             enabled.append(identifier)
-            if "active_profile" in item.get("produces", []):
+            if "active_profile" in produces:
                 profile_producers += 1
                 if requirement != "none":
                     raise UpdateError("人物建档能力不能要求已激活档案")
@@ -231,11 +239,52 @@ def trusted_https_context() -> ssl.SSLContext:
 
 def read_url(url: str, limit: int) -> bytes:
     request = urllib.request.Request(url, headers={"User-Agent": "YETONG-Skill-Updater/1", "Accept": "application/vnd.github+json", "Cache-Control": "no-cache"})
-    with urllib.request.urlopen(request, timeout=30, context=trusted_https_context()) as response:
-        data = response.read(limit + 1)
+    try:
+        with urllib.request.urlopen(request, timeout=30, context=trusted_https_context()) as response:
+            data = response.read(limit + 1)
+    except http.client.HTTPException as exc:
+        raise UpdateError(f"官方 HTTPS 响应协议错误：{exc}") from exc
     if len(data) > limit:
         raise UpdateError("远端响应超过允许大小")
     return data
+
+
+def archive_revision(data: bytes) -> str:
+    """Read only the bounded global PAX header of an official branch archive."""
+    if len(data) > MAX_DOWNLOAD:
+        raise UpdateError("分支快照下载过大")
+    try:
+        with gzip.GzipFile(fileobj=io.BytesIO(data)) as compressed:
+            header = tarfile.TarInfo.frombuf(compressed.read(512), "utf-8", "strict")
+            if header.type != tarfile.XGLTYPE or not 0 < header.size <= 1024:
+                raise UpdateError("官方分支快照缺少有界的全局 PAX 提交元数据")
+            metadata = compressed.read(header.size)
+    except (OSError, EOFError, UnicodeError, tarfile.TarError, zlib.error) as exc:
+        raise UpdateError("官方分支快照提交元数据损坏") from exc
+    if len(metadata) != header.size:
+        raise UpdateError("官方分支快照提交元数据截断")
+    revision = None
+    position = 0
+    while position < len(metadata):
+        separator = metadata.find(b" ", position)
+        length_text = metadata[position:separator] if separator != -1 else b""
+        if not length_text.isdigit() or len(length_text) > 4:
+            raise UpdateError("官方分支快照 PAX 记录长度无效")
+        length = int(length_text)
+        end = position + length
+        if end > len(metadata) or end <= separator + 1 or metadata[end - 1:end] != b"\n":
+            raise UpdateError("官方分支快照 PAX 记录截断")
+        key, equals, value = metadata[separator + 1:end - 1].partition(b"=")
+        if not key or not equals:
+            raise UpdateError("官方分支快照 PAX 记录无效")
+        if key == b"comment":
+            if revision is not None or not re.fullmatch(rb"[0-9a-f]{40}", value):
+                raise UpdateError("官方分支快照没有唯一有效提交号")
+            revision = value.decode("ascii")
+        position = end
+    if revision is None:
+        raise UpdateError("官方分支快照没有有效提交号")
+    return revision
 
 
 def snapshot_from_archive(data: bytes, revision: str) -> Snapshot:
@@ -246,7 +295,15 @@ def snapshot_from_archive(data: bytes, revision: str) -> Snapshot:
     count = 0
     expanded = 0
     try:
-        with tarfile.open(fileobj=io.BytesIO(data), mode="r|gz") as archive:
+        # Bound the whole expanded stream before tarfile can allocate PAX or
+        # long-name metadata, which is not included in regular member sizes.
+        with gzip.GzipFile(fileobj=io.BytesIO(data)) as compressed:
+            archive_bytes = compressed.read(MAX_EXPANDED + 1)
+        if len(archive_bytes) > MAX_EXPANDED:
+            raise UpdateError("快照解压后超过允许大小")
+        with tarfile.open(fileobj=io.BytesIO(archive_bytes), mode="r|") as archive:
+            if archive.pax_headers.get("comment", revision) != revision:
+                raise UpdateError("快照提交元数据与固定提交不一致")
             for member in archive:
                 count += 1
                 if count > MAX_ENTRIES:
@@ -274,7 +331,7 @@ def snapshot_from_archive(data: bytes, revision: str) -> Snapshot:
                 if len(content) != member.size:
                     raise UpdateError(f"快照文件截断：{relative}")
                 extracted[relative] = content
-    except (tarfile.TarError, EOFError) as exc:
+    except (OSError, tarfile.TarError, EOFError, zlib.error) as exc:
         raise UpdateError("远端快照不是完整 tar.gz") from exc
     manifest_bytes = extracted.get(MANIFEST)
     if manifest_bytes is None:
@@ -289,17 +346,28 @@ def snapshot_from_archive(data: bytes, revision: str) -> Snapshot:
 
 
 def fetch_snapshot() -> Snapshot:
+    failures: list[str] = []
     try:
         response = json.loads(read_url(f"https://api.github.com/repos/{REPOSITORY}/commits/{BRANCH}", 256 * 1024))
         revision = response.get("sha", "") if isinstance(response, dict) else ""
         if not isinstance(revision, str) or not REVISION.fullmatch(revision):
             raise UpdateError("GitHub 没有返回有效提交号")
+    except (OSError, ValueError, UpdateError) as exc:
+        failures.append(f"GitHub API：{exc}")
+        try:
+            # Branch contents are only a revision probe. Fetch the immutable SHA
+            # again below, so a moving branch can never mix package revisions.
+            probe = read_url(f"https://codeload.github.com/{REPOSITORY}/tar.gz/refs/heads/{BRANCH}", MAX_DOWNLOAD)
+            revision = archive_revision(probe)
+        except (OSError, ValueError, UpdateError) as fallback_exc:
+            failures.append(f"官方分支快照：{fallback_exc}")
+            raise UpdateError(f"无法取得官方更新提交号：{'；'.join(failures)}") from fallback_exc
+    try:
         data = read_url(f"https://codeload.github.com/{REPOSITORY}/tar.gz/{revision}", MAX_DOWNLOAD)
         return snapshot_from_archive(data, revision)
-    except (OSError, ValueError) as exc:
-        if isinstance(exc, UpdateError):
-            raise
-        raise UpdateError(f"无法取得官方更新快照：{exc}") from exc
+    except (OSError, ValueError, UpdateError) as exc:
+        failures.append(f"官方固定提交快照 {revision}：{exc}")
+        raise UpdateError(f"无法取得官方更新快照：{'；'.join(failures)}") from exc
 
 
 def installation_root(target: Path) -> Path:
