@@ -34,6 +34,12 @@
     "yetong-review/references/LICENSE": "397f45869eb64b94eca9a75bdd303b56e695a52ae6186cf8d8a7b5f60555b7e0",
     "yetong-review/references/review-rubric.md": "81de8570a2c202a3024e3992241e94e9d756d18bb9455dc62bc0d18968020585",
     "yetong-review/scripts/check_profile.py": "ff6346833713560fa510cd5b312f88e10938604b182d193b4698e743fbde9c67",
+    "yetong-timer/SKILL.md": "d459284b1b84b04e591206235b5ec44a09bfb17073dca70379d905c6091cfe04",
+    "yetong-timer/agents/openai.yaml": "2f6d34b74fa28074904d2d90857e325a5409f936cafe43d8bf37b3c90a3f1d9e",
+    "yetong-timer/references/LICENSE": "397f45869eb64b94eca9a75bdd303b56e695a52ae6186cf8d8a7b5f60555b7e0",
+    "yetong-timer/references/hotspot-method.md": "b8780beb8211e6a19ccb6929fc83aa990d9f9704d7cb849ef24597139da6075c",
+    "yetong-timer/references/scheduling.md": "c53d9ccaff2b38428e21571da0e1c0ea0cd3402131b48bbb05d5a79a59bb284d",
+    "yetong-timer/scripts/check_profile.py": "16a5b8af066ca4d2c62c41fb18152b4da0ff162cdd7dec481f791a079ac807e4",
     "yetong-title/SKILL.md": "b9c59dae96b59e128a11194d0c7cfd3cb0dbf1efdb7762cb0810d14dcc0f32b7",
     "yetong-title/agents/openai.yaml": "2448fe98c5e27115445dc0f785c58fd2b98c8cc02becd8ce4ee7505817d3e349",
     "yetong-title/references/LICENSE": "397f45869eb64b94eca9a75bdd303b56e695a52ae6186cf8d8a7b5f60555b7e0",
@@ -50,11 +56,11 @@
     "yetong-update/references/LICENSE": "397f45869eb64b94eca9a75bdd303b56e695a52ae6186cf8d8a7b5f60555b7e0",
     "yetong-update/references/update-method.md": "ceda877a13ca6e86e374916994a35bc199b9178837cc09010d8b6039a3b4966d",
     "yetong-update/scripts/update_bundle.py": "fe458b77c28dcd5e769ca5f597faaac586b39c01acd35dc26551457867a24a22",
-    "yetong/SKILL.md": "a3acf7bb3caf869e78b3d724a97a7f43000cb85020d90bb34b6dc3131a648856",
+    "yetong/SKILL.md": "b7913476142cf9a51eb35e62c6cdaa6b0f430c7620af28f567397e27c6cb70a4",
     "yetong/agents/openai.yaml": "5d1a4d672632a23fc23e6d137a35f1bf9c09031de4ddf854d55452195ba72ace",
     "yetong/references/LICENSE": "397f45869eb64b94eca9a75bdd303b56e695a52ae6186cf8d8a7b5f60555b7e0",
-    "yetong/references/capability-registry.json": "dee6b7b145879b8cab97b0af6bc37d58633befae2f2018fb210ab93521f2aa0f",
-    "yetong/references/routing-contract.md": "6d7ff3197a7d77cb09f04063e4aefa5edd939283aa9b51a3d8b5a02d70d8cdc6",
+    "yetong/references/capability-registry.json": "bbbe7f38aa6459a1793ef18f7294e195b7dd81f2211b11110bdab53d975da480",
+    "yetong/references/routing-contract.md": "0fd6551d6184218a864afadc893c926abf9f71dcecebcfa81c65d7bee019dc42",
     "yetong/scripts/show_menu.py": "0d4bc4885f3ffe7f8add0648721f6fbb5f7c437669cd2f08bc834e95eca5ffd7",
     "yetong/scripts/validate_registry.py": "06d4f6f68fa656644d8c5196ca2c3bf4855c99e5b757573a6a7455fbe86993f1"
   },
@@ -64,6 +70,7 @@
     "yetong",
     "yetong-dna",
     "yetong-topic",
+    "yetong-timer",
     "yetong-copy",
     "yetong-review",
     "yetong-title",
@@ -71,6 +78,6 @@
     "yetong-promo",
     "yetong-update"
   ],
-  "source_fingerprint": "2bada63bfb9ee898b07ea73b64a02ea2293bcdbcce64dfac089f2fbc631a6032",
-  "version": "0.8.0"
+  "source_fingerprint": "dff726e424c3c4144905961e213cb8e7d7ffa72441e91b5dfbaec8c925701561",
+  "version": "0.9.0"
 }

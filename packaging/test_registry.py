@@ -46,7 +46,7 @@ class RegistryTests(unittest.TestCase):
         enabled = validator.validate(self.root, REGISTRY_RELATIVE)
         self.assertEqual(set(enabled), {
             "yetong-dna", "yetong-topic", "yetong-copy", "yetong-review",
-            "yetong-title", "yetong-cover", "yetong-promo", "yetong-update",
+            "yetong-title", "yetong-cover", "yetong-promo", "yetong-timer", "yetong-update",
         })
         lines = {item["id"]: item for item in self.registry["service_lines"]}
         self.assertEqual(set(lines), {"content", "moments", "performance"})

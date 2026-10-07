@@ -6,7 +6,7 @@
       "id": "content",
       "label": "小红书内容创作",
       "status": "active",
-      "description": "叶童把一线服务会员与内容运营中形成的判断，提炼为从人物底色、本地客群问题到选题、表达和呈现的完整工作流程。按叶童提供的经验口径，这套方法来自约五年实践及近 2,000 篇内容的创作与复盘；公开 Skill 包只收录提炼后的方法和结构，不含这些案例全文，也不保证流量或成交。每篇内容都须回到教练本人真实的城市、服务与可公开素材。"
+      "description": "叶童把一线服务会员与内容运营中形成的判断，提炼为从人物底色、本地客群问题到选题、表达和呈现的完整工作流程。每日热点选题也属于本线：结合本人已激活 DNA 和可核实热点，每次给出 3 个面向本地潜在会员的选题；定时运行须绑定当前环境真实可用的原生调度。按叶童提供的经验口径，这套方法来自约五年实践及近 2,000 篇内容的创作与复盘；公开 Skill 包只收录提炼后的方法和结构，不含这些案例全文，也不保证流量或成交。内容可通过泛曝光建立专业信任，不强制卖课；每篇仍须回到教练本人真实的城市、服务与可公开素材。"
     },
     {
       "id": "moments",
@@ -49,13 +49,31 @@
       "package_files": ["yetong-topic/SKILL.md", "yetong-topic/references/LICENSE", "yetong-topic/agents/openai.yaml", "yetong-topic/references/profile-contract.md", "yetong-topic/references/topic-method.md", "yetong-topic/scripts/check_profile.py"],
       "purpose": "从本地会员顾虑和教练本人素材生成、筛选或延展选题，并标注四大内容类型",
       "use_when": ["小红书今天不知道发什么或只有宽泛方向", "要批量出小红书题、筛题或确定本篇角度", "接着上一小红书主题再出选题"],
-      "avoid_when": ["已经有一个具体问题且只要写成单篇", "已有草稿只要改稿", "课程朋友圈推广、按营销计划写朋友圈或修改课程朋友圈文案"],
+      "avoid_when": ["已经有一个具体问题且只要写成单篇", "已有草稿只要改稿", "课程朋友圈推广、按营销计划写朋友圈或修改课程朋友圈文案", "根据本人 DNA 创建每日热点选题任务、单次试跑热点选题或运行已注册热点任务"],
       "profile_requirement": "active",
       "required_any_of": [],
       "produces": ["selected_topic_candidates"],
       "offer_fit": "任何真实面向本地线下会员的健身服务；具体产品从该教练档案取得",
       "profile_check": "yetong-topic/scripts/check_profile.py",
       "priority": 50,
+      "enabled": true
+    },
+    {
+      "id": "yetong-timer",
+      "service_line": "content",
+      "menu_label": "每日热点选题",
+      "menu_trigger": "使用 $yetong-timer，根据我的DNA帮我进行定时任务选题，每天定时给我3个热点选题。",
+      "entry": "yetong-timer/SKILL.md",
+      "package_files": ["yetong-timer/SKILL.md", "yetong-timer/agents/openai.yaml", "yetong-timer/references/LICENSE", "yetong-timer/references/hotspot-method.md", "yetong-timer/references/scheduling.md", "yetong-timer/scripts/check_profile.py"],
+      "purpose": "结合当前教练本人已激活 DNA 与可核实热点，每次生成 3 个面向本地潜在会员的选题，并在真实可用的宿主原生调度中创建每日任务；支持单次试跑和已注册任务的实际运行",
+      "use_when": ["根据我的DNA帮我进行定时任务选题", "每天定时给我3个热点选题", "只试跑一次结合本人 DNA 的热点选题", "按已注册的每日热点任务执行本次选题"],
+      "avoid_when": ["普通‘出5题’、常规批量选题或同主题延展，未要求热点试跑或定时任务", "课程朋友圈每天4条计划或按营销计划写文案", "通用任意任务调度、任务取消或调度管理", "要求自动扩写口播脚本、发布标题、封面或代发内容", "要求教同行获客或全国线上招生"],
+      "profile_requirement": "active",
+      "required_any_of": [],
+      "produces": ["daily_hotspot_topics", "scheduled_topic_task_status"],
+      "offer_fit": "面向当前教练真实服务区域的本地线下潜在会员；抖音等平台只作为热点来源，可通过泛曝光建立专业信任，不强制卖课，不教同行获客。创建任务须绑定本人 active DNA、热点方法和当前环境已核实的原生调度能力",
+      "profile_check": "yetong-timer/scripts/check_profile.py",
+      "priority": 90,
       "enabled": true
     },
     {

@@ -15,7 +15,7 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 ROOT = Path(__file__).resolve().parents[1]
 ARCHIVE_ROOT = "yetong-bundle"
-VERSION = "0.8.0"
+VERSION = "0.9.0"
 REGISTRY_FILE = "yetong/references/capability-registry.json"
 RELEASE_FILE = "yetong/references/release-manifest.json"
 CORE_FILES = (
