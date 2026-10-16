@@ -15,7 +15,7 @@ DEFAULT_REGISTRY = "yetong/references/capability-registry.json"
 DEFAULT_MANIFEST = "yetong/references/release-manifest.json"
 CORE_RUNTIME_FILES = {
     "yetong/SKILL.md", "yetong/agents/openai.yaml", "yetong/references/LICENSE",
-    "yetong/references/routing-contract.md", DEFAULT_REGISTRY,
+    "yetong/references/routing-contract.md", "yetong/references/local-title-contract.md", DEFAULT_REGISTRY,
     "yetong/scripts/show_menu.py", "yetong/scripts/validate_registry.py",
 }
 SLUG = re.compile(r"^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$")

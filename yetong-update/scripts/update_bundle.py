@@ -454,6 +454,16 @@ def plan_update(root: Path, snapshot: Snapshot) -> dict:
         raise UpdateError("快照清单字节与已解析内容不一致")
     validate_payloads(snapshot.manifest, snapshot.payloads)
     owned, old_modules, old_version = old_ownership(root)
+    # Published versions use X.Y.Z. A local preview or upstream rollback must
+    # not silently turn an ordinary update into a downgrade. Compare integers:
+    # lexical ordering would incorrectly put 0.10.0 below 0.9.9.
+    local_numbered = re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", old_version or "")
+    remote_numbered = re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", snapshot.manifest["version"])
+    if local_numbered and remote_numbered and tuple(map(int, remote_numbered.groups())) < tuple(map(int, local_numbered.groups())):
+        raise UpdateError(
+            f"远端版本 {snapshot.manifest['version']} 低于当前 {old_version}，未覆盖本地文件；"
+            "可能是本地预览尚未发布或远端回退，请先核对版本来源。普通更新不执行降级。"
+        )
     desired = {**snapshot.payloads, MANIFEST: snapshot.manifest_bytes}
     changes: list[str] = []
     for identifier in snapshot.manifest["skills"]:

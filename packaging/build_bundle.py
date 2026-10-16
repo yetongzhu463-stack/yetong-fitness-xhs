@@ -15,7 +15,7 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 ROOT = Path(__file__).resolve().parents[1]
 ARCHIVE_ROOT = "yetong-bundle"
-VERSION = "0.9.1"
+VERSION = "0.10.1"
 REGISTRY_FILE = "yetong/references/capability-registry.json"
 RELEASE_FILE = "yetong/references/release-manifest.json"
 CORE_FILES = (
@@ -28,6 +28,7 @@ CORE_FILES = (
     "yetong/references/LICENSE",
     "yetong/agents/openai.yaml",
     "yetong/references/routing-contract.md",
+    "yetong/references/local-title-contract.md",
     REGISTRY_FILE,
     RELEASE_FILE,
     "yetong/scripts/validate_registry.py",
@@ -51,6 +52,10 @@ def archive_name(source_name: str) -> str:
 
 
 def registered_files() -> tuple[list[str], list[str]]:
+    subprocess.run(
+        [sys.executable, str(ROOT / "packaging/sync_local_title_rules.py"), "--check"],
+        cwd=ROOT, check=True, capture_output=True, text=True,
+    )
     subprocess.run(
         [sys.executable, str(ROOT / "yetong/scripts/validate_registry.py")],
         cwd=ROOT,

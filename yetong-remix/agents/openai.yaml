@@ -1,0 +1,4 @@
+interface:
+  display_name: "yetong-remix"
+  short_description: "拆解外部参考，复用本人 DNA 和已有方法重创小红书笔记"
+  default_prompt: "使用 $yetong-remix，把我提供的参考文字重创为符合我当前账号、真实资料与表达方式的小红书文案。"
