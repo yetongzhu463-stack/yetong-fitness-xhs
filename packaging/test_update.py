@@ -32,7 +32,9 @@ PINNED_URL = f"https://codeload.github.com/{updater.REPOSITORY}/tar.gz/{REVISION
 
 def current_payloads() -> dict[str, bytes]:
     registry = json.loads((ROOT / updater.REGISTRY).read_text(encoding="utf-8"))
-    paths = set(updater.LEGACY_CORE)
+    # Exercise the complete current runtime, including newly added router helpers.
+    manifest = json.loads((ROOT / updater.MANIFEST).read_text(encoding="utf-8"))
+    paths = set(manifest["files_sha256"])
     for item in registry["capabilities"]:
         if item["enabled"]:
             paths.update(item["package_files"])
@@ -95,7 +97,12 @@ def future_payloads(payloads: dict[str, bytes]) -> dict[str, bytes]:
     identifier = "yetong-followup"
     entry = f"{identifier}/SKILL.md"
     license_path = f"{identifier}/references/LICENSE"
-    result[entry] = f"---\nname: {identifier}\ndescription: Test future registered update member.\n---\n\n# Future member\n".encode()
+    result[entry] = (
+        f"---\nname: {identifier}\ndescription: Test future registered update member.\n"
+        "metadata:\n  yetong-handoff: |\n"
+        "    - 已登记并有输入 → 测试产物\n"
+        "    - 不交出：自动发布\n---\n\n# Future member\n"
+    ).encode()
     result[license_path] = (ROOT / "LICENSE").read_bytes()
     registry = json.loads(result[updater.REGISTRY])
     registry["capabilities"].append({
@@ -406,6 +413,11 @@ class UpdateTests(unittest.TestCase):
 
     def test_legacy_registry_bootstrap_preserves_extra(self) -> None:
         (self.target / updater.MANIFEST).unlink()
+        # Model an actual pre-manifest router; newer unowned core files would
+        # correctly be treated as conflicts rather than silently overwritten.
+        for name in self.old.payloads:
+            if name.startswith("yetong/") and name not in updater.LEGACY_CORE:
+                (self.target / name).unlink()
         extra = self.target / "yetong/person-dna.md"
         extra.write_bytes(b"private legacy profile")
         result = updater.apply_snapshot(self.target, self.new)

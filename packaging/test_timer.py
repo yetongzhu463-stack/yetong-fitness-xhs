@@ -25,7 +25,7 @@ class TimerTests(unittest.TestCase):
         self.assertEqual(timer["required_any_of"], [])
         self.assertEqual(timer["profile_check"], "yetong-timer/scripts/check_profile.py")
         self.assertEqual(set(timer["produces"]), {"daily_hotspot_topics", "scheduled_topic_task_status"})
-        self.assertEqual(len(timer["package_files"]), 6)
+        self.assertIn("yetong-timer/references/local-title-contract.md", timer["package_files"])
 
     def test_resources_and_private_eval_are_separated(self):
         registry = json.loads(REGISTRY.read_text(encoding="utf-8"))

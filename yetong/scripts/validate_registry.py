@@ -17,6 +17,7 @@ CORE_RUNTIME_FILES = {
     "yetong/SKILL.md", "yetong/agents/openai.yaml", "yetong/references/LICENSE",
     "yetong/references/routing-contract.md", "yetong/references/local-title-contract.md", DEFAULT_REGISTRY,
     "yetong/scripts/show_menu.py", "yetong/scripts/validate_registry.py",
+    "yetong/scripts/list_skills.py",
 }
 SLUG = re.compile(r"^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$")
 FRONTMATTER_NAME = re.compile(r"\A---\s*\n(?P<block>.*?)\n---\s*\n", re.DOTALL)
@@ -64,6 +65,75 @@ def skill_name(path: Path) -> str:
         if line.startswith("name:"):
             return line.partition(":")[2].strip().strip("\"'")
     raise ValueError(f"Skill 缺少 name：{path}")
+
+
+def skill_description(path: Path) -> str:
+    match = FRONTMATTER_NAME.match(path.read_text(encoding="utf-8"))
+    if match is None:
+        raise ValueError(f"Skill 缺少 frontmatter：{path}")
+    lines = match.group("block").splitlines()
+    positions = [index for index, line in enumerate(lines) if line.startswith("description:")]
+    if len(positions) != 1:
+        raise ValueError(f"Skill 必须有一个 description：{path}")
+    index = positions[0]
+    value = lines[index].partition(":")[2].strip()
+    if value in {"|", ">", "|-", ">-"}:
+        parts = []
+        for line in lines[index + 1:]:
+            if line and not line[0].isspace():
+                break
+            parts.append(line.strip())
+        value = ("\n" if value.startswith("|") else " ").join(parts).strip()
+    else:
+        value = value.strip("\"'")
+    if not value:
+        raise ValueError(f"Skill description 不能为空：{path}")
+    return value
+
+
+def skill_handoff(path: Path) -> str:
+    """Read the package's literal metadata.yetong-handoff convention without PyYAML."""
+    match = FRONTMATTER_NAME.match(path.read_text(encoding="utf-8"))
+    if match is None:
+        raise ValueError(f"Skill 缺少 frontmatter：{path}")
+    lines = match.group("block").splitlines()
+    in_metadata = False
+    metadata_count = 0
+    blocks = []
+    for index, line in enumerate(lines):
+        if line.startswith("metadata:"):
+            metadata_count += 1
+            if line != "metadata:" or metadata_count > 1:
+                raise ValueError(f"Skill metadata 格式无效或重复：{path}")
+            in_metadata = True
+            continue
+        if line and not line[0].isspace():
+            in_metadata = False
+        if not in_metadata or not line.lstrip().startswith("yetong-handoff:"):
+            continue
+        if line != "  yetong-handoff: |":
+            raise ValueError(f"接手字段必须使用 metadata.yetong-handoff 的字面多行格式：{path}")
+        entries = []
+        for continuation in lines[index + 1:]:
+            if not continuation.strip():
+                continue
+            indent = len(continuation) - len(continuation.lstrip())
+            if indent <= 2:
+                break
+            if not continuation.startswith("    - "):
+                raise ValueError(f"接手字段每项须独占一行并以四空格和 - 开头：{path}")
+            entries.append(continuation.strip())
+        blocks.append(entries)
+    if len(blocks) != 1:
+        raise ValueError(f"Skill 必须有一个 metadata.yetong-handoff 接手字段：{path}")
+    entries = blocks[0]
+    if len(entries) < 2 or not entries[-1].startswith("- 不交出：") or not entries[-1].partition("：")[2].strip():
+        raise ValueError(f"接手字段须含接手状态，并以非空的不交出行结束：{path}")
+    for entry in entries[:-1]:
+        before, arrow, after = entry[2:].partition(" → ")
+        if not arrow or not before.strip() or not after.strip() or entry.startswith("- 不交出："):
+            raise ValueError(f"接手字段须按 接手时的状态 → 交出的东西 编写：{path}")
+    return "\n".join(entries)
 
 
 def validate(root: Path, registry_relative: str) -> list[str]:
@@ -121,8 +191,12 @@ def validate(root: Path, registry_relative: str) -> list[str]:
         if not isinstance(entry, str) or entry != f"{identifier}/SKILL.md":
             raise ValueError(f"{identifier} 的 entry 必须指向同名目录的 SKILL.md")
         safe_relative(entry)
-        if item["enabled"] and skill_name(safe_file(root, entry)) != identifier:
-            raise ValueError(f"{identifier} 的目录、登记名与 frontmatter name 不一致")
+        if item["enabled"]:
+            skill_path = safe_file(root, entry)
+            if skill_name(skill_path) != identifier:
+                raise ValueError(f"{identifier} 的目录、登记名与 frontmatter name 不一致")
+            skill_description(skill_path)
+            skill_handoff(skill_path)
         package_files = item["package_files"]
         nonempty_strings(package_files, f"{identifier}.package_files")
         if len(package_files) != len(set(package_files)) or entry not in package_files:

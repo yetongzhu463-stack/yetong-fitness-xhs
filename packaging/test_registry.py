@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import importlib.util
+import hashlib
 import json
 import shutil
 import subprocess
@@ -54,11 +55,30 @@ class RegistryTests(unittest.TestCase):
             capture_output=True, text=True, check=False,
         )
 
+    def catalog(self) -> subprocess.CompletedProcess:
+        return subprocess.run(
+            [sys.executable, "-B", "-S", str(PROJECT_ROOT / "yetong/scripts/list_skills.py"), "--root", str(self.root)],
+            capture_output=True, text=True, check=False,
+        )
+
+    def refresh_manifest(self) -> None:
+        release = self.root / validator.DEFAULT_MANIFEST
+        manifest = json.loads(release.read_text(encoding="utf-8"))
+        enabled = [item for item in self.registry["capabilities"] if item["enabled"]]
+        expected = set(validator.CORE_RUNTIME_FILES)
+        for item in enabled:
+            expected.update(item["package_files"])
+        hashes = {name: hashlib.sha256((self.root / name).read_bytes()).hexdigest() for name in sorted(expected)}
+        manifest["skills"] = ["yetong", *[item["id"] for item in enabled]]
+        manifest["files_sha256"] = hashes
+        manifest["source_fingerprint"] = hashlib.sha256(json.dumps(hashes, sort_keys=True).encode("utf-8")).hexdigest()
+        release.write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
+
     def test_current_modules_have_short_ids_and_service_lines(self) -> None:
         enabled = validator.validate(self.root, REGISTRY_RELATIVE)
         self.assertEqual(set(enabled), {
             "yetong-dna", "yetong-topic", "yetong-copy", "yetong-review",
-            "yetong-title", "yetong-cover", "yetong-promo", "yetong-timer", "yetong-update",
+            "yetong-title", "yetong-cover", "yetong-promo", "yetong-timer", "yetong-update", "yetong-remix", "yetong-stasis-angle",
         })
         lines = {item["id"]: item for item in self.registry["service_lines"]}
         self.assertEqual(set(lines), {"content", "moments", "performance"})
@@ -101,7 +121,10 @@ class RegistryTests(unittest.TestCase):
         skill_path = self.root / entry
         skill_path.parent.mkdir(parents=True)
         skill_path.write_text(
-            f"---\nname: {identifier}\ndescription: 检查本地健身内容草稿的发布风险。\n---\n\n# 发布风险检查\n",
+            f"---\nname: {identifier}\ndescription: 检查本地健身内容草稿的发布风险。\n"
+            "metadata:\n  yetong-handoff: |\n"
+            "    - 已有草稿要检查发布风险 → 风险报告与修改建议\n"
+            "    - 不交出：整篇写稿与自动发布\n---\n\n# 发布风险检查\n",
             encoding="utf-8",
         )
         gate = f"{identifier}/scripts/check_profile.py"
@@ -128,6 +151,15 @@ class RegistryTests(unittest.TestCase):
         })
         self.save_registry()
         self.assertIn(identifier, validator.validate(self.root, REGISTRY_RELATIVE))
+        self.prepare_complete_menu()
+        self.save_registry()
+        self.refresh_manifest()
+        result = self.catalog()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        rows = {row["name"]: row for row in json.loads(result.stdout)}
+        self.assertIn(identifier, rows)
+        self.assertIn("风险报告与修改建议", rows[identifier]["handoff"])
+        self.assertEqual(rows[identifier]["entry"], str(skill_path.resolve()))
 
     def test_duplicate_module_rejected(self) -> None:
         self.registry["capabilities"].append(dict(self.registry["capabilities"][0]))
@@ -169,13 +201,15 @@ class RegistryTests(unittest.TestCase):
             validator.validate(self.root, REGISTRY_RELATIVE)
 
     def test_missing_profile_gate_rejected(self) -> None:
-        self.registry["capabilities"][1]["profile_check"] = None
+        topic = next(item for item in self.registry["capabilities"] if item["id"] == "yetong-topic")
+        topic["profile_check"] = None
         self.save_registry()
         with self.assertRaisesRegex(ValueError, "预检脚本"):
             validator.validate(self.root, REGISTRY_RELATIVE)
 
     def test_planned_service_line_cannot_claim_enabled_skill(self) -> None:
-        self.registry["capabilities"][1]["service_line"] = "performance"
+        topic = next(item for item in self.registry["capabilities"] if item["id"] == "yetong-topic")
+        topic["service_line"] = "performance"
         self.save_registry()
         with self.assertRaisesRegex(ValueError, "规划中"):
             validator.validate(self.root, REGISTRY_RELATIVE)
@@ -189,7 +223,10 @@ class RegistryTests(unittest.TestCase):
         skill_path = self.root / entry
         skill_path.parent.mkdir(parents=True)
         skill_path.write_text(
-            f"---\nname: {identifier}\ndescription: 根据本人档案规划面向本地会员的朋友圈内容。\n---\n\n# 朋友圈内容\n",
+            f"---\nname: {identifier}\ndescription: 根据本人档案规划面向本地会员的朋友圈内容。\n"
+            "metadata:\n  yetong-handoff: |\n"
+            "    - 本人档案已激活，要安排朋友圈 → 朋友圈内容计划\n"
+            "    - 不交出：小红书笔记\n---\n\n# 朋友圈内容\n",
             encoding="utf-8",
         )
         gate = f"{identifier}/scripts/check_profile.py"
@@ -232,7 +269,7 @@ class RegistryTests(unittest.TestCase):
         self.prepare_complete_menu()
         result = self.menu()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("运行文件校验通过：10/10", result.stdout)
+        self.assertIn("运行文件校验通过：12/12", result.stdout)
         self.assertIn(str(self.root.resolve()), result.stdout)
         self.assertIn("宿主当前发现／实际调用：本脚本未核验", result.stdout)
         self.assertIn("跨会话持久保存：本脚本未核验", result.stdout)
@@ -318,12 +355,123 @@ class RegistryTests(unittest.TestCase):
                     validator.safe_relative(relative)
 
     def test_private_or_unlisted_file_rejected(self) -> None:
-        self.registry["capabilities"][1]["package_files"].append(
+        topic = next(item for item in self.registry["capabilities"] if item["id"] == "yetong-topic")
+        topic["package_files"].append(
             "yetong-topic/evals/private-notes.md"
         )
         self.save_registry()
         with self.assertRaisesRegex(ValueError, "不安全"):
             validator.validate(self.root, REGISTRY_RELATIVE)
+
+    def test_catalog_reads_current_skill_metadata_and_profile_contract(self) -> None:
+        self.prepare_complete_menu()
+        # The candidate must come from the installed header, not cached registry prose.
+        path = self.root / "yetong-topic/SKILL.md"
+        text = path.read_text(encoding="utf-8")
+        text = text.replace("description: 为健身教练生成", "description: 为当前测试教练生成", 1)
+        path.write_text(text, encoding="utf-8")
+        self.refresh_manifest()
+        result = self.catalog()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        rows = json.loads(result.stdout)
+        self.assertEqual({row["name"] for row in rows}, set(validator.validate(self.root, REGISTRY_RELATIVE)))
+        self.assertNotIn("yetong", {row["name"] for row in rows})
+        topic = next(row for row in rows if row["name"] == "yetong-topic")
+        self.assertTrue(topic["description"].startswith("为当前测试教练生成"))
+        self.assertEqual(topic["handoff"], validator.skill_handoff(path))
+        self.assertEqual(topic["profile_requirement"], "active")
+        self.assertEqual(topic["source"], str(path.parent.resolve()))
+        self.assertEqual(topic["profile_check"], str((self.root / "yetong-topic/scripts/check_profile.py").resolve()))
+
+    def test_event_angle_is_a_verified_candidate_without_profile_dependency(self) -> None:
+        self.prepare_complete_menu()
+        result = self.catalog()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        rows = {row["name"]: row for row in json.loads(result.stdout)}
+        event = rows["yetong-stasis-angle"]
+        self.assertEqual(event["profile_requirement"], "none")
+        self.assertIsNone(event["profile_check"])
+        self.assertEqual(set(event["required_any_of"]), {"selected_event", "event_materials"})
+        self.assertIn("没有合格候选", event["handoff"])
+        self.assertIn("不擅自用附带素材生产选题", event["handoff"])
+        self.assertEqual(event["handoff"], validator.skill_handoff(self.root / "yetong-stasis-angle/SKILL.md"))
+        # Registering event analysis must preserve downstream personalization gates.
+        for identifier in ("yetong-copy", "yetong-topic", "yetong-title"):
+            self.assertEqual(rows[identifier]["profile_requirement"], "active")
+
+    def test_enabled_module_without_handoff_is_not_a_dispatch_candidate(self) -> None:
+        path = self.root / "yetong-topic/SKILL.md"
+        original = path.read_text(encoding="utf-8")
+        header, body = original.split("\n---\n", 1)
+        header = header.split("\nmetadata:", 1)[0]
+        path.write_text(header + "\n---\n" + body, encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "yetong-handoff"):
+            validator.validate(self.root, REGISTRY_RELATIVE)
+        result = self.catalog()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("yetong-handoff", result.stdout)
+        self.assertNotIn("Traceback", result.stderr)
+
+    def test_handoff_requires_input_output_rows_and_a_final_exclusion(self) -> None:
+        path = self.root / "yetong-topic/SKILL.md"
+        prefix = "---\nname: yetong-topic\ndescription: 测试接手契约。\nmetadata:\n"
+        cases = (
+            "  yetong-handoff: |\n    - 有输入但没有交付\n    - 不交出：自动发布\n",
+            "  yetong-handoff: |\n    - 已有草稿 → 诊断结果\n",
+            "  yetong-handoff: |\n    - 已有草稿 → 诊断结果\n    - 不交出：\n",
+            "  yetong-handoff: >\n    - 已有草稿 → 诊断结果\n    - 不交出：自动发布\n",
+            "  yetong-handoff: |\n    - 不交出：自动发布\n    - 已有草稿 → 诊断结果\n    - 不交出：完整改稿\n",
+            "  yetong-handoff: |\n    - 已有草稿 → 诊断结果\n    - 不交出：自动发布\n"
+            "  yetong-handoff: |\n    - 已有题 → 文案\n    - 不交出：标题\n",
+        )
+        for block in cases:
+            with self.subTest(block=block):
+                path.write_text(prefix + block + "---\n\n# 测试\n", encoding="utf-8")
+                with self.assertRaises(ValueError):
+                    validator.skill_handoff(path)
+
+    def test_handoff_in_body_or_another_metadata_key_is_not_accepted(self) -> None:
+        path = self.root / "yetong-topic/SKILL.md"
+        for content in (
+            "---\nname: yetong-topic\ndescription: 测试。\n---\n\nmetadata:\n  yetong-handoff: |\n    - 有输入 → 有输出\n    - 不交出：自动发布\n",
+            "---\nname: yetong-topic\ndescription: 测试。\nmetadata:\n  dbs-handoff: |\n    - 有输入 → 有输出\n    - 不交出：自动发布\n---\n",
+        ):
+            with self.subTest(content=content):
+                path.write_text(content, encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "yetong-handoff"):
+                    validator.skill_handoff(path)
+
+    def test_catalog_ignores_unregistered_and_disabled_directories(self) -> None:
+        self.prepare_complete_menu()
+        item = next(item for item in self.registry["capabilities"] if item["id"] == "yetong-cover")
+        item["enabled"] = False
+        shutil.rmtree(self.root / item["id"])
+        unregistered = self.root / "yetong-unregistered"
+        unregistered.mkdir()
+        (unregistered / "SKILL.md").write_text("not a valid skill", encoding="utf-8")
+        self.save_registry()
+        self.refresh_manifest()
+        result = self.catalog()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        names = {row["name"] for row in json.loads(result.stdout)}
+        self.assertNotIn("yetong-cover", names)
+        self.assertNotIn("yetong-unregistered", names)
+
+    def test_catalog_rejects_changed_metadata_until_manifest_is_updated(self) -> None:
+        self.prepare_complete_menu()
+        path = self.root / "yetong-topic/SKILL.md"
+        path.write_text(path.read_text(encoding="utf-8").replace("未指定默认 8 个", "未指定默认 6 个", 1), encoding="utf-8")
+        result = self.catalog()
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("运行文件哈希不匹配：yetong-topic/SKILL.md", result.stdout)
+        self.assertNotIn("Traceback", result.stderr)
+
+    def test_description_literal_and_folded_headers_are_read_without_dependencies(self) -> None:
+        path = self.root / "yetong-topic/SKILL.md"
+        for marker, expected in (("|", "第一行\n第二行"), (">", "第一行 第二行")):
+            with self.subTest(marker=marker):
+                path.write_text(f"---\nname: yetong-topic\ndescription: {marker}\n  第一行\n  第二行\n---\n", encoding="utf-8")
+                self.assertEqual(validator.skill_description(path), expected)
 
 
 if __name__ == "__main__":

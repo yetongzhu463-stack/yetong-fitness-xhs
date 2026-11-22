@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "scope": "默认服务健身教练真实区域的本地线下潜在会员；参考稿转换仅按本次明确账号读者做笔记，不因此扩展其他业务模块范围",
+  "scope": "默认服务健身教练真实区域的本地线下潜在会员；参考稿转换仅按本次明确账号读者做笔记，已提供事件的争点分析保留本次明确身份与受众、无需 DNA；两者不扩展其他业务模块范围",
   "service_lines": [
     {
       "id": "content",
@@ -38,6 +38,46 @@
       "offer_fit": "任何真实面向本地线下会员的健身服务；具体产品从该教练档案取得",
       "profile_check": null,
       "priority": 100,
+      "enabled": true
+    },
+    {
+      "id": "yetong-stasis-angle",
+      "service_line": "content",
+      "menu_label": "事件争点选角",
+      "menu_trigger": "使用 $yetong-stasis-angle，帮我从这件事里找到有证据支持的讲述角度。",
+      "entry": "yetong-stasis-angle/SKILL.md",
+      "package_files": [
+        "yetong-stasis-angle/SKILL.md",
+        "yetong-stasis-angle/agents/openai.yaml",
+        "yetong-stasis-angle/references/theory-map.md",
+        "yetong-stasis-angle/references/LICENSE"
+      ],
+      "purpose": "从已发生或选定的事件中建立事实账本、识别四类争点，筛选证据支持的讲述角度与表达边界；没有合格候选时交付缺口",
+      "use_when": [
+        "已有个人遭遇、行业案例或公开争议，不知道从什么角度讲",
+        "明确要用事件争点法选角，或继续同一事件的证据与角度校准"
+      ],
+      "avoid_when": [
+        "只有抽象观点、产品或泛方向且未选择事件，先问一个具体事件",
+        "只要完整稿件、批量标题或流量预测",
+        "要求解释、逆向、检查或修改 Skill 本身，保持该任务",
+        "要求靠臆测动机、人格指控或隐私曝光制造冲突"
+      ],
+      "profile_requirement": "none",
+      "required_any_of": [
+        "selected_event",
+        "event_materials"
+      ],
+      "produces": [
+        "event_fact_ledger",
+        "stasis_angle_candidates",
+        "qualified_angle_or_gaps",
+        "telling_outline",
+        "evidence_boundaries"
+      ],
+      "offer_fit": "已提供事件的讲述角度分析，保留用户本次明确身份与受众，无需 DNA；不扩大其他模块的业务、个性化或发布权限。进入本地会员成稿仍须满足下游门槛",
+      "profile_check": null,
+      "priority": 89,
       "enabled": true
     },
     {

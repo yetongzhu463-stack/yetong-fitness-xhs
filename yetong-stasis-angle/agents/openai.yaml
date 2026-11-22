@@ -1,0 +1,4 @@
+interface:
+  display_name: "yetong-stasis-angle（叶童事件争点）"
+  short_description: "从具体事件筛选受众在意且证据可支撑的争点，交付主角度与讲述路径"
+  default_prompt: "使用 $yetong-stasis-angle，根据我提供的事件、证据和目标观众，筛选主角度并说明事实边界与讲述路径。"
