@@ -9,7 +9,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE = ROOT / "yetong-topic/references/local-title-contract.md"
-MIRROR_IDS = ("yetong", "yetong-dna", "yetong-copy", "yetong-review", "yetong-title", "yetong-cover", "yetong-promo", "yetong-timer", "yetong-remix")
+MIRROR_IDS = ("yetong", "yetong-dna", "yetong-copy", "yetong-review", "yetong-title", "yetong-promo", "yetong-timer", "yetong-remix")
 
 
 def sync(*, check: bool) -> int:

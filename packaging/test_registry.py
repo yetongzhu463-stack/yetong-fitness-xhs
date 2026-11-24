@@ -78,7 +78,7 @@ class RegistryTests(unittest.TestCase):
         enabled = validator.validate(self.root, REGISTRY_RELATIVE)
         self.assertEqual(set(enabled), {
             "yetong-dna", "yetong-topic", "yetong-copy", "yetong-review",
-            "yetong-title", "yetong-cover", "yetong-promo", "yetong-timer", "yetong-update", "yetong-remix", "yetong-stasis-angle",
+            "yetong-title", "yetong-fengmian-iuiu", "yetong-promo", "yetong-timer", "yetong-update", "yetong-remix", "yetong-stasis-angle", "yetong-zhishiku", "yetong-xiezuo-huoren",
         })
         lines = {item["id"]: item for item in self.registry["service_lines"]}
         self.assertEqual(set(lines), {"content", "moments", "performance"})
@@ -187,7 +187,7 @@ class RegistryTests(unittest.TestCase):
                 self.save_registry()
 
     def test_disabled_module_may_be_absent_from_runtime(self) -> None:
-        item = next(value for value in self.registry["capabilities"] if value["id"] == "yetong-cover")
+        item = next(value for value in self.registry["capabilities"] if value["id"] == "yetong-fengmian-iuiu")
         item["enabled"] = False
         shutil.rmtree(self.root / item["id"])
         self.save_registry()
@@ -269,13 +269,14 @@ class RegistryTests(unittest.TestCase):
         self.prepare_complete_menu()
         result = self.menu()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-        self.assertIn("运行文件校验通过：12/12", result.stdout)
+        self.assertIn("运行文件校验通过：14/14", result.stdout)
         self.assertIn(str(self.root.resolve()), result.stdout)
         self.assertIn("宿主当前发现／实际调用：本脚本未核验", result.stdout)
         self.assertIn("跨会话持久保存：本脚本未核验", result.stdout)
         self.assertIn("规划中（非安装缺失）", result.stdout)
         self.assertIn("不属于本次安装项", result.stdout)
-        self.assertIn("泛朋友圈人设／日常内容尚未覆盖", result.stdout)
+        self.assertIn("已给素材的日常短文可用写作感", result.stdout)
+        self.assertIn("长期排期和业绩管理仍未覆盖", result.stdout)
         self.assertNotIn("yetong-performance", result.stdout)
         self.assertNotIn("未安装完整", result.stdout)
 
@@ -399,6 +400,25 @@ class RegistryTests(unittest.TestCase):
         for identifier in ("yetong-copy", "yetong-topic", "yetong-title"):
             self.assertEqual(rows[identifier]["profile_requirement"], "active")
 
+    def test_new_shared_modules_and_cover_are_verified_without_dna(self) -> None:
+        self.prepare_complete_menu()
+        result = self.catalog()
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        rows = {row["name"]: row for row in json.loads(result.stdout)}
+        self.assertNotIn("yetong-cover", rows)
+        for identifier in ("yetong-fengmian-iuiu", "yetong-zhishiku", "yetong-xiezuo-huoren"):
+            with self.subTest(identifier=identifier):
+                row = rows[identifier]
+                self.assertEqual(row["profile_requirement"], "none")
+                self.assertIsNone(row["profile_check"])
+                self.assertTrue(row["required_any_of"])
+                self.assertEqual(row["handoff"], validator.skill_handoff(self.root / identifier / "SKILL.md"))
+        self.assertIn("exact_text_overlay", rows["yetong-fengmian-iuiu"]["produces"])
+        self.assertIn("knowledge_root", rows["yetong-zhishiku"]["required_any_of"])
+        self.assertEqual(rows["yetong-xiezuo-huoren"]["service_line"], "shared")
+        for identifier in ("yetong-copy", "yetong-topic", "yetong-title", "yetong-promo"):
+            self.assertEqual(rows[identifier]["profile_requirement"], "active")
+
     def test_enabled_module_without_handoff_is_not_a_dispatch_candidate(self) -> None:
         path = self.root / "yetong-topic/SKILL.md"
         original = path.read_text(encoding="utf-8")
@@ -443,7 +463,7 @@ class RegistryTests(unittest.TestCase):
 
     def test_catalog_ignores_unregistered_and_disabled_directories(self) -> None:
         self.prepare_complete_menu()
-        item = next(item for item in self.registry["capabilities"] if item["id"] == "yetong-cover")
+        item = next(item for item in self.registry["capabilities"] if item["id"] == "yetong-fengmian-iuiu")
         item["enabled"] = False
         shutil.rmtree(self.root / item["id"])
         unregistered = self.root / "yetong-unregistered"
@@ -454,7 +474,7 @@ class RegistryTests(unittest.TestCase):
         result = self.catalog()
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         names = {row["name"] for row in json.loads(result.stdout)}
-        self.assertNotIn("yetong-cover", names)
+        self.assertNotIn("yetong-fengmian-iuiu", names)
         self.assertNotIn("yetong-unregistered", names)
 
     def test_catalog_rejects_changed_metadata_until_manifest_is_updated(self) -> None:

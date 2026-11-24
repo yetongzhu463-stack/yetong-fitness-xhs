@@ -1,0 +1,4 @@
+interface:
+  display_name: "yetong-xiezuo-huoren（叶童写作感）"
+  short_description: "按本轮文体和篇幅写自然中文，保留作者声音与事实，减少重复扩写"
+  default_prompt: "使用 $yetong-xiezuo-huoren，按我给的素材、文体和篇幅写作或改稿，保留我的表达意图与事实。"

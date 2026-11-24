@@ -1,0 +1,4 @@
+interface:
+  display_name: "yetong-fengmian-iuiu（叶童3：4封面）"
+  short_description: "把本地健身服务承诺转成真人加证据载体的3:4封面工作流"
+  default_prompt: "使用 $yetong-fengmian-iuiu：读取我已给的标题、正文和参考图，把内容中的承诺做成可见证据；先给封面信息地图、中文生图提示词、准确叠字清单与质量自检。只有我明确说“直接生成”时才出图。"

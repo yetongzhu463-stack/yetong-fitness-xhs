@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "scope": "默认服务健身教练真实区域的本地线下潜在会员；参考稿转换仅按本次明确账号读者做笔记，已提供事件的争点分析保留本次明确身份与受众、无需 DNA；两者不扩展其他业务模块范围",
+  "scope": "本地会员专项内容沿用各模块门槛；共用知识库与通用中文写作按本轮目录、作者和读者；事件分析与新封面按已给证据接手，不扩大其他业务模块范围",
   "service_lines": [
     {
       "id": "content",
@@ -12,7 +12,7 @@
       "id": "moments",
       "label": "朋友圈营销",
       "status": "active",
-      "description": "当前已交付课程朋友圈营销：依据教练本人已激活档案和独立产品资料卡，梳理本地目标会员、真实优势与顾虑，安排宣传节奏并给出对应文案。方法覆盖产品说明、选择理由、真实反馈与成交复购证据，重视过程标准、持续标签和每天的具体行动；未上线泛朋友圈人设运营、日常内容或业绩管理。原图片和示例文案不在运行包，缺真实反馈或成交素材不编造热销。"
+      "description": "当前已交付课程朋友圈营销：依据教练本人已激活档案和独立产品资料卡，梳理本地目标会员、真实优势与顾虑，安排宣传节奏并给出对应文案。方法覆盖产品说明、选择理由、真实反馈与成交复购证据，重视过程标准、持续标签和每天的具体行动；已给素材的日常短文由共用写作处理，泛人设运营、长期排期或业绩管理仍未上线。原图片和示例文案不在运行包，缺真实反馈或成交素材不编造热销。"
     },
     {
       "id": "performance",
@@ -38,6 +38,95 @@
       "offer_fit": "任何真实面向本地线下会员的健身服务；具体产品从该教练档案取得",
       "profile_check": null,
       "priority": 100,
+      "enabled": true
+    },
+    {
+      "id": "yetong-zhishiku",
+      "service_line": "shared",
+      "menu_label": "知识库搭建与优化",
+      "menu_trigger": "使用 $yetong-zhishiku，在我指定的文件夹里查找、收录资料或维护知识库导航。",
+      "entry": "yetong-zhishiku/SKILL.md",
+      "package_files": [
+        "yetong-zhishiku/SKILL.md",
+        "yetong-zhishiku/agents/openai.yaml",
+        "yetong-zhishiku/references/build-and-store.md",
+        "yetong-zhishiku/references/query-and-evidence.md",
+        "yetong-zhishiku/references/maintain-and-govern.md",
+        "yetong-zhishiku/scripts/audit_knowledge.py",
+        "yetong-zhishiku/references/LICENSE"
+      ],
+      "purpose": "在明确本地目录内建立、查询、收录和维护知识库，回读原文与版本证据并核验变化",
+      "use_when": [
+        "已给本地目录，要找文件、按资料回答或确认版本",
+        "建立知识库、收录资料、修正路径或检查瘦身导航"
+      ],
+      "avoid_when": [
+        "改写原始资料正文或整理整台电脑",
+        "受管长期记忆库治理、凭证浏览器数据或向量数据库",
+        "只查询却未授权修复、移动或删除资料"
+      ],
+      "profile_requirement": "none",
+      "required_any_of": [
+        "knowledge_root",
+        "target_file",
+        "navigation_file"
+      ],
+      "produces": [
+        "knowledge_navigation",
+        "evidence_backed_answer",
+        "located_files",
+        "knowledge_update_or_audit"
+      ],
+      "offer_fit": "共用本地资料能力，不依赖 DNA 或本地会员身份；只在用户指定范围内按实际授权操作，不把技能目录当业务知识库",
+      "profile_check": null,
+      "priority": 92,
+      "enabled": true
+    },
+    {
+      "id": "yetong-xiezuo-huoren",
+      "service_line": "shared",
+      "menu_label": "叶童写作感",
+      "menu_trigger": "使用 $yetong-xiezuo-huoren，按我的素材、文体和篇幅写作或改稿，保留事实与作者声音。",
+      "entry": "yetong-xiezuo-huoren/SKILL.md",
+      "package_files": [
+        "yetong-xiezuo-huoren/SKILL.md",
+        "yetong-xiezuo-huoren/LICENSE",
+        "yetong-xiezuo-huoren/agents/openai.yaml",
+        "yetong-xiezuo-huoren/references/task-and-material.md",
+        "yetong-xiezuo-huoren/references/forum-prose.md",
+        "yetong-xiezuo-huoren/references/reality.md",
+        "yetong-xiezuo-huoren/references/fiction.md",
+        "yetong-xiezuo-huoren/references/formats.md",
+        "yetong-xiezuo-huoren/references/revision.md",
+        "yetong-xiezuo-huoren/references/style-rules.json",
+        "yetong-xiezuo-huoren/references/provenance.md",
+        "yetong-xiezuo-huoren/scripts/check_writing.py",
+        "yetong-xiezuo-huoren/references/LICENSE"
+      ],
+      "purpose": "按当前文体和篇幅写自然中文，保留作者声音和现实事实，区分虚构并检查重复与事实增量",
+      "use_when": [
+        "已给素材或草稿，要求短文、口播、朋友圈、知乎、公众号、评论、个人叙事或虚构",
+        "明确要求去模型腔、只改语气、轻改或重写"
+      ],
+      "avoid_when": [
+        "内容不足却要求虚构现实经历或数字",
+        "代码、翻译、公文合同或技术文档的格式改写",
+        "把通用写作冒充本地营销策划、选题或业务诊断"
+      ],
+      "profile_requirement": "none",
+      "required_any_of": [
+        "source_material",
+        "existing_draft",
+        "writing_brief"
+      ],
+      "produces": [
+        "chinese_draft_or_revision",
+        "minimal_material_question",
+        "length_check_if_required"
+      ],
+      "offer_fit": "共用中文写作能力，按当次作者、读者、文体、事实和篇幅执行，不强制教练身份或 DNA；专项业务交接保留其事实、地区与权限门槛",
+      "profile_check": null,
+      "priority": 84,
       "enabled": true
     },
     {
@@ -189,20 +278,47 @@
       "enabled": true
     },
     {
-      "id": "yetong-cover",
+      "id": "yetong-fengmian-iuiu",
       "service_line": "content",
-      "menu_label": "叶童原版封面",
-      "menu_trigger": "使用 $yetong-cover，按叶童原版流程给这篇做封面，一次问我一个问题。",
-      "entry": "yetong-cover/SKILL.md",
-      "package_files": ["yetong-cover/SKILL.md", "yetong-cover/references/LICENSE", "yetong-cover/agents/openai.yaml", "yetong-cover/original-cover-workflow.md", "yetong-cover/references/visual-language.md", "yetong-cover/references/layout-templates.md", "yetong-cover/references/local-title-contract.md", "yetong-cover/scripts/check_profile.py"],
-      "purpose": "读取本人已激活档案与具体选题后，执行叶童原版单题编号选择封面流程，使用本人参考图制作 3:4 真人实拍封面提示词与文字排版清单；接续优化或授权成图",
-      "use_when": ["已有选定的具体本地会员选题，要封面构图或生图提示词", "已有草稿，要按叶童原版流程设计真人封面和文字排版", "正在本模块单题问答中回复编号或上传参考素材", "已拿到本模块提示词，回复‘继续优化提示词’或‘直接生成’", "明确要求把已定内容制作成封面图片，并已核对必要素材与授权"],
-      "avoid_when": ["只有宽泛方向或孤立标题，尚不清楚本篇回答什么问题", "脱离封面会话、只要求拟定或修改笔记发布标题", "只要求诊断整篇内容而不制作封面", "要求编造教练本人、会员或场馆的实拍画面", "要求无人物纯信息海报作为原版封面"],
-      "profile_requirement": "active",
-      "required_any_of": ["selected_topic", "existing_draft"],
-      "produces": ["xhs_cover_plan", "image_prompt", "text_layout_list", "final_cover_image_if_available"],
-      "offer_fit": "任何真实面向本地线下会员的健身服务；封面人物、场馆、动作与产品须来自该教练已确认档案和有权使用的素材",
-      "profile_check": "yetong-cover/scripts/check_profile.py",
+      "menu_label": "真人与证据封面",
+      "menu_trigger": "使用 $yetong-fengmian-iuiu，把这篇的已确认事实做成3:4封面方案、提示词和准确叠字清单。",
+      "entry": "yetong-fengmian-iuiu/SKILL.md",
+      "package_files": [
+        "yetong-fengmian-iuiu/SKILL.md",
+        "yetong-fengmian-iuiu/agents/openai.yaml",
+        "yetong-fengmian-iuiu/references/information-map.md",
+        "yetong-fengmian-iuiu/references/layout-routes.md",
+        "yetong-fengmian-iuiu/references/visual-language.md",
+        "yetong-fengmian-iuiu/references/quality-gates.md",
+        "yetong-fengmian-iuiu/references/LICENSE"
+      ],
+      "purpose": "把本地健身内容的承诺画成真人与可核对载体，交付信息地图、构图、中文提示词、准确叠字和质量自检",
+      "use_when": [
+        "已有具体正文或已确认事实，要封面方案或提示词",
+        "同一封面接续优化、修改文字，或明确直接生成"
+      ],
+      "avoid_when": [
+        "只要发布标题或完整文章",
+        "要本人出图但没有人像，先补图1",
+        "要求虚构场馆客户或强化无依据疗效保障"
+      ],
+      "profile_requirement": "none",
+      "required_any_of": [
+        "selected_topic",
+        "existing_draft",
+        "confirmed_facts",
+        "existing_cover_plan"
+      ],
+      "produces": [
+        "cover_information_map",
+        "xhs_cover_plan",
+        "image_prompt",
+        "exact_text_overlay",
+        "quality_check",
+        "final_cover_image_if_available"
+      ],
+      "offer_fit": "本地线下健身教练的已确认内容与素材，无需先建 DNA；固定主标题保持原文，地区只用用户明确可公开范围作辅助锚点",
+      "profile_check": null,
       "priority": 80,
       "enabled": true
     },

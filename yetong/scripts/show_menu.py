@@ -50,7 +50,7 @@ def show(root: Path) -> int:
     print(f"运行文件校验通过：{len(enabled) + 1}/{len(enabled) + 1} 个 YETONG Skill｜版本 {version}")
     print(f"本次核验目录：{root}")
     print("宿主当前发现／实际调用：本脚本未核验；跨会话持久保存：本脚本未核验。")
-    print("YETONG｜面向教练所在地的线下健身会员")
+    print("YETONG｜本地健身内容与营销；共用知识库、中文写作和包内维护")
 
     for line in registry["service_lines"]:
         status = "已交付（文件已核验）" if line["status"] == "active" else "规划中（非安装缺失）"
@@ -71,8 +71,8 @@ def show(root: Path) -> int:
             print(f"- {item['id']}｜{item['menu_label']}：{item['purpose']}。")
             print(f"  试着说：{item['menu_trigger']}")
 
-    print("\n范围说明：泛朋友圈人设／日常内容尚未覆盖，是产品范围边界，不是安装遗漏。")
-    print("第一次使用：先用 yetong-dna 建立并确认自己的私人档案；已有已激活档案时，交接路径后直接说出需求。")
+    print("\n范围说明：已给素材的日常短文可用写作感；泛人设运营、长期排期和业绩管理仍未覆盖，不是安装遗漏。")
+    print("第一次使用：直接说任务。个性化本地专项按需建 DNA；知识库、通用写作、事件选角与已确认内容的新封面无需先建档。")
     return 0
 
 

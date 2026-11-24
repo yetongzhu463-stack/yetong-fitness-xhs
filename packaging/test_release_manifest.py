@@ -23,6 +23,18 @@ class ReleaseTests(unittest.TestCase):
     def test_current_manifest_matches_runtime(self) -> None:
         bundle.validate_release(self.payloads)
 
+    def test_discoverable_skills_match_the_published_members(self) -> None:
+        expected = {"yetong", *bundle.registered_files()[0]}
+        discoverable = {p.parent.name for p in ROOT.glob("*/SKILL.md")}
+        self.assertEqual(discoverable, expected)
+        self.assertNotIn("yetong-cover", discoverable)
+
+    def test_writer_upstream_notice_is_kept_separate_from_bundle_license(self) -> None:
+        notice = self.payloads[bundle.archive_name("yetong-xiezuo-huoren/LICENSE")]
+        self.assertIn(b"Human Writing Skill contributors", notice)
+        self.assertIn(b"MIT License", notice)
+        self.assertNotEqual(notice, self.payloads[bundle.archive_name("LICENSE")])
+
     def test_changed_runtime_rejects_stale_manifest(self) -> None:
         changed = dict(self.payloads)
         name = bundle.archive_name("yetong-dna/SKILL.md")

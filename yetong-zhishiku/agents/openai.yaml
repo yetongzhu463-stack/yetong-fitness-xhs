@@ -1,0 +1,4 @@
+interface:
+  display_name: "yetong-zhishiku（叶童知识库搭建与优化）"
+  short_description: "搭建和维护本地知识库，按原文核对版本，检查路径并优化导航层级"
+  default_prompt: "使用 $yetong-zhishiku，按当前任务搭建、查询、收录或优化这个文件夹的知识库，并验证结果。"

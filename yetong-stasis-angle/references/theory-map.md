@@ -2,6 +2,14 @@
 
 仅在解释理论来源、核对机制或区分理论与本 Skill 操作规则时读取。日常选角不必向用户堆砌理论名。
 
+## JTBD：确定对谁、在什么处境下有用
+
+Jobs to Be Done 关注人在具体处境中希望获得的进展。本 Skill 借它把本轮受众、处境、所求理解或行动与用户内容目标压成一句用途，并在合格候选间核对这项用途。进展可以包含情绪和身份，不要求全部落到实用教学或成交。
+
+这是面向内容选择的应用性改编，不是 JTBD 原有的内容评分公式。用户指定的用途支持本轮选择，不证明真实市场需求；缺少观众材料的假设须标明，不能据此虚构群体动机。
+
+- [Christensen Institute：Jobs to Be Done Theory](https://www.christenseninstitute.org/theory/jobs-to-be-done/)
+
 ## Stasis：确定争议在哪一层
 
 传统争点讨论可追溯至古典修辞学，Hermagoras、Cicero、Quintilian 是重要来源。事实、定义、性质／价值及程序／管辖是相关分类；不同古典作者的分类并不完全一致，不将术语唯一首创归给某个人。
@@ -19,7 +27,7 @@ Robert M. Entman，Framing: Toward Clarification of a Fractured Paradigm，1993�
 
 ## 新闻价值：观众为何注意
 
-Johan Galtung、Mari Holmboe Ruge，The Structure of Foreign News，1965；Tony Harcup、Deirdre O’Neill，What Is News? News Values Revisited (Again)，线上 2016 年、卷期 2017 年。冲突、意外、人物、接近性和影响范围等因素帮助判断入口和公共相关，不能由此推算播放量。
+Johan Galtung、Mari Holmboe Ruge，The Structure of Foreign News，1965；Tony Harcup、Deirdre O’Neill，What Is News? News Values Revisited (Again)，线上 2016 年、卷期 2017 年。冲突、意外、人物、接近性和影响范围等因素帮助判断讲述入口，不能由此推算播放量。入口广度不等于目标受众相关，也不能自动压过本轮用途。
 
 - [Galtung、Ruge 原论文](https://ikmz.pages.uzh.ch/meth-aufbau/files/GaltungRuge1965.pdf)
 - [Harcup、O’Neill 文章记录](https://eprints.whiterose.ac.uk/id/eprint/95423/)
@@ -28,14 +36,16 @@ Johan Galtung、Mari Holmboe Ruge，The Structure of Foreign News，1965；Tony 
 
 Stephen Toulmin，The Uses of Argument，初版 1958 年。主张、材料、论证桥梁、支持、限定与反驳承担不同作用。对应 Step 3—5 的证据连接和结论收窄；检查论证结构不能替代来源真实性核查。
 
+“作者增量”是本 Skill 的编辑设计：用可核对的材料、推论和方法识别新增理解。Toulmin 支持检查新增判断的根据，不证明专业身份或亲历经历必然带来高质量结论；公开材料分析也可能形成有价值的贡献。
+
 - [Cambridge University Press 书目](https://www.cambridge.org/core/books/uses-of-argument/26CF801BC12004587B66778297D5567C)
 
 ## 补充参考与归因边界
 
 Jeanne Fahnestock 的 Rhetorical Style: The Uses of Language in Persuasion（2011）可辅助理解修辞表达，不另算作本流程第五个主理论。参见 [Oxford University Press 书目](https://academic.oup.com/book/6456)。
 
-四类事实账本、候选数量、五项评分、风险分、6 分门槛、排序与输出模板是工程和编辑规则，不冒称经典理论原有公式。它们仍需通过实际案例检验；数字不是统计效度或效果保证。
+四类事实账本、候选数量、五项评分、风险分、6 分门槛、排序与输出模板是工程和编辑规则，不冒称经典理论原有公式。目标受众相关、作者增量及按本轮用途比较是本版的编辑选择；6 分门槛沿用于粗筛，不能声称换维度后已获统计校准。它们仍需通过实际案例检验；数字不是统计效度或效果保证。
 
-整体组合以顺序执行为主：界定材料 → 生成争点 → 组织命题 → 筛选与交付。证据检查贯穿全程，失败时收窄或交出缺口。
+整体组合以顺序执行为主：确定本轮用途 → 界定材料 → 生成并检查争点 → 组织命题 → 在合格候选间按用途比较 → 交付。证据检查贯穿全程，失败时收窄或交出缺口；用途和入口不能放宽证据边界。
 
 表达与排版参考 [中文文案排版指北](https://github.com/sparanoid/chinese-copywriting-guidelines)。这里只用于文字规范，不作为争点生成理论。
